@@ -97,7 +97,7 @@ def log_start(task: str, env: str, model: str):
 
 def log_step(step: int, action: str, reward: float, done: bool, error: str = None):
     done_str = "true" if done else "false"
-    err_str  = error if error else "null"
+    err_str  = str(error).replace('\n', ' ') if error else "null"
     # FIX #1: reward=:.2f
     print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_str} error={err_str}", flush=True)
 
@@ -268,16 +268,16 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
         print(f"[DEBUG] Grader score: {grader_score:.4f}", file=sys.stderr)
 
     finally:
-        # FIX #9: always emitted, even on exception
-        # FIX #3: no score= field
-        # FIX #2: rewards formatted to 2dp inside log_end
-        log_end(success=success, steps=steps_taken, rewards=rewards)
-
         try:
             if hasattr(env, 'close'):
                 env.close()
         except Exception:
             pass
+
+        # FIX #9: always emitted, even on exception
+        # FIX #3: no score= field
+        # FIX #2: rewards formatted to 2dp inside log_end
+        log_end(success=success, steps=steps_taken, rewards=rewards)
 
 # ---------------------------------------------------------------------------
 # Main — FIX #8: single task per invocation
