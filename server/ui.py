@@ -41,6 +41,9 @@ def process_video(
     if not cap.isOpened():
         return None, "Error: Could not open video file."
 
+    # Gradio provides RGB, but our OpenCV engine expects BGR
+    ad_image_bgr = cv2.cvtColor(ad_image, cv2.COLOR_RGB2BGR)
+
     # Video properties
     width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -106,7 +109,7 @@ def process_video(
             # Place ad
             result, bin_mask, adj = engine.place(
                 frame, 
-                ad_image, 
+                ad_image_bgr, 
                 target_corners, 
                 persons=persons, 
                 depth_map=depth_map, 
