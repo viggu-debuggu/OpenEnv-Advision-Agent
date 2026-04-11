@@ -1,5 +1,5 @@
 try:
-    from openenv.core.env_client import SyncEnvClient
+    from openenv.core import SyncEnvClient
 except ImportError:
     from openenv.core.env_client import HTTPEnvClient as SyncEnvClient
 
