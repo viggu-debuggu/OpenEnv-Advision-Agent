@@ -31,6 +31,19 @@ tags:
 
 ---
 
+## 🎭 Phase 3: Human Evaluation Guide
+
+If you are a human judge evaluating this project for **Phase 3**, please use our **Hugging Face Live UI** (hosted at the root of the Space). 
+
+### How to Evaluate:
+1.  **Visit the Space**: [🤗 Live Demo](https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent)
+2.  **Upload a Video**: You can use your own or use one from our examples at the bottom.
+3.  **Upload an Ad**: Try a transparent PNG for the best effect.
+4.  **Check for "World-Lock"**: Notice how the ad stays perfectly stuck to the background even when the camera moves. This is powered by our **ORB Homography** engine.
+5.  **Observe the Lighting**: Our **LAB Color Transfer** grader automatically adjusts the ad's colors to match the scene's ambient lighting.
+
+---
+
 ## 🧠 What is AdVision AI?
 
 **AdVision AI** is a spatially-aware reinforcement learning agent that automatically detects flat surfaces in video content (walls, billboards, shelves) and duplicates photorealistic brand advertisements onto them — without any manual editing or re-filming.
