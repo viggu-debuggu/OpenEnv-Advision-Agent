@@ -13,9 +13,9 @@ from models import AdVisionAction, AdVisionObservation
 
 # This automatically handles all /reset, /step, /state, /schema endpoints
 app = create_app(
-    env_cls=AdVisionEnvironment,
-    action_cls=AdVisionAction,
-    observation_cls=AdVisionObservation
+    AdVisionEnvironment,
+    AdVisionAction,
+    AdVisionObservation
 )
 
 def main(host: str = "0.0.0.0", port: int = 7860):
