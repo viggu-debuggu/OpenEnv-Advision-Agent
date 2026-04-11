@@ -213,7 +213,8 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
     success     = False
 
     try:
-        obs = env.reset()
+        result = env.reset()
+        obs = result.observation
 
         for step in range(1, MAX_STEPS + 1):
             act_dict   = get_llm_action(client, step, obs.model_dump(), last_reward, history, task_desc)
@@ -222,15 +223,12 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
             err = None
             try:
                 action = Action(**act_dict)
-                obs_new = env.step(action)
-                obs = obs_new
-                reward_val = getattr(obs_new, "reward", 0.0)
-                done_val   = getattr(obs_new, "done", False)
-                md         = getattr(obs_new, "metadata", {})
-                info       = md.get("info", {}) if md else {}
+                result = env.step(action)
+                obs = result.observation
                 
-                reward = float(reward_val)
-                done   = bool(done_val)
+                reward = float(result.reward)
+                done   = bool(result.done)
+                info   = result.info or {}
             except Exception as e:
                 reward = 0.0
                 done   = False
@@ -323,10 +321,13 @@ def main() -> None:
     print(f"[DEBUG] Starting task={TASK_NAME} model={MODEL_NAME}", file=sys.stderr)
 
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    EVAL_URL = os.getenv("OPENENV_URL", "http://localhost:7860")
-    env = AdVisionEnv(base_url=EVAL_URL)
+    SPACE_URL = os.getenv("SPACE_URL", "ws://localhost:7860")
+    
+    async_env = AdVisionEnv(base_url=SPACE_URL)
+    env = async_env.sync()
 
-    run_task(client, env, task)
+    with env:
+        run_task(client, env, task)
 
 
 if __name__ == "__main__":
