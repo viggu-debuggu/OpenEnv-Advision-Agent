@@ -13,11 +13,13 @@ if ROOT_DIR not in sys.path:
 
 from advision_env.models.vision_models import ObjectDetector, DepthEstimator
 from advision_env.pipeline.placement_engine import PlacementEngine, PlacementConfig
+from advision_env.env.reward import RewardFunction
 
 # Initialize core components
 detector = ObjectDetector()
 depth_est = DepthEstimator()
 engine = PlacementEngine()
+reward_fn = RewardFunction()
 
 def process_video(
     input_video,
@@ -34,6 +36,7 @@ def process_video(
         return None, "Please upload both a video and an ad image."
 
     engine.reset()
+    reward_fn.__init__() # Reset temporal history
     cap = cv2.VideoCapture(input_video)
     if not cap.isOpened():
         return None, "Error: Could not open video file."
@@ -49,8 +52,6 @@ def process_video(
     fd, out_path = tempfile.mkstemp(suffix=".mp4")
     os.close(fd)
     
-    # We use mp4v for compatibility, but imageio or ffmpeg wrapper would be better for web
-    # For HF spaces, we'll try to use 'avc1' or standard 'mp4v'
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
 
@@ -64,6 +65,7 @@ def process_video(
         enable_shadow=(shadow_strength > 0)
     )
 
+    all_rewards = []
     frame_idx = 0
     try:
         while cap.isOpened() and frame_idx < max_process_frames:
@@ -71,7 +73,7 @@ def process_video(
             if not ret:
                 break
 
-            progress(frame_idx / max_process_frames, desc="Processing frames...")
+            progress(frame_idx / max_process_frames, desc=f"Processing frame {frame_idx}...")
 
             # Run detection and depth on first frame or periodically
             if frame_idx == 0:
@@ -87,15 +89,22 @@ def process_video(
                         [w*0.7, h*0.7], [w*0.3, h*0.7]
                     ], dtype=np.float32)
                     target_corners = mock_corners
+                    target_surf_mask = np.zeros((h, w), np.uint8)
+                    cv2.fillPoly(target_surf_mask, [target_corners.astype(np.int32)], 1)
                     persons = []
                     depth_map = np.ones((h, w), np.float32) * 0.5
+                    target_depth = 0.5
                 else:
                     # Use largest surface
                     best = max(surfaces, key=lambda s: s.area)
                     target_corners = best.corners
+                    h, w = frame.shape[:2]
+                    target_surf_mask = np.zeros((h, w), np.uint8)
+                    cv2.fillPoly(target_surf_mask, [target_corners.astype(np.int32)], 1)
+                    target_depth = depth_est.region_depth(depth_map, best.bbox)
             
             # Place ad
-            result, _, _ = engine.place(
+            result, bin_mask, adj = engine.place(
                 frame, 
                 ad_image, 
                 target_corners, 
@@ -104,6 +113,16 @@ def process_video(
                 cfg=cfg
             )
             
+            # Update corners for next frame temporal calc
+            target_corners = adj
+
+            # Calculate reward for this frame
+            rc = reward_fn.compute(
+                frame, result, bin_mask, target_surf_mask, 
+                target_depth, persons, corners=adj
+            )
+            all_rewards.append(rc.to_dict())
+
             out.write(result)
             frame_idx += 1
 
@@ -111,7 +130,19 @@ def process_video(
         cap.release()
         out.release()
 
-    return out_path, f"Processed {frame_idx} frames successfully."
+    if not all_rewards:
+        return out_path, "No frames processed."
+
+    # Compute average scores
+    avg_scores = {k: np.mean([r[k] for r in all_rewards]) for k in all_rewards[0].keys()}
+    summary = f"✅ Processed {frame_idx} frames.\n\n"
+    summary += "🏆 REWARD BREAKDOWN (Phase 3 Evaluation):\n"
+    summary += f"• Overall Quality: {avg_scores['total']:.2f}/0.90\n"
+    summary += f"• Realism: {avg_scores['realism']:.2f}  • Alignment: {avg_scores['alignment']:.2f}\n"
+    summary += f"• Lighting: {avg_scores['lighting']:.2f} • Occlusion: {avg_scores['occlusion']:.2f}\n"
+    summary += f"• Stability: {avg_scores['temporal']:.2f}"
+
+    return out_path, summary
 
 # UI Construction
 with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="indigo")) as demo:
