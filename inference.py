@@ -41,7 +41,7 @@ from advision_env.openenv.tasks import (
     Task2_RealisticBlend,
     Task3_TemporalConsistency,
 )
-from models import Action, Reward
+from advision_env.models import AdVisionAction, Reward
 
 # ---------------------------------------------------------------------------
 # Credentials — strictly following hackathon checklist
@@ -278,6 +278,9 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
                     else:  # task3_hard
                         r = getattr(tr, 'temporal_stability_reward', 0.0)
                     task_obj.update(float(r), entry["info"])
+        except Exception as ge:
+            print(f"[DEBUG] Grader evaluation skipped/failed: {ge}", file=sys.stderr)
+
         # Normalized score in [0, 1]
         score = sum(rewards) / float(len(rewards)) if rewards else 0.0
         score = min(max(score, 0.0), 1.0)
