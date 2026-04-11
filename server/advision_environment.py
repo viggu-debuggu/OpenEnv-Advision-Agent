@@ -4,11 +4,10 @@ import numpy as np
 from typing import Optional
 
 from openenv.core.env_server import Environment
-from models import AdVisionAction, AdVisionObservation, Reward
+from advision_env.models import AdVisionAction, AdVisionObservation, AdVisionState, Reward
 from advision_env.env.ad_placement_env import AdPlacementEnv
 
-from openenv.core.env_server.types import State
-class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, State]):
+class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVisionState]):
     def __init__(self):
         super().__init__()
         
@@ -92,8 +91,8 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, State
         )
         return obs
 
-    def state(self) -> State:
-        return State(
+    def state(self) -> AdVisionState:
+        return AdVisionState(
             episode_id=getattr(self, 'episode_id', "unknown"),
             step_count=self.internal_env._frame_idx if hasattr(self.internal_env, '_frame_idx') else 0,
             max_frames=self.internal_env.max_frames,

@@ -28,6 +28,7 @@ app = gr.mount_gradio_app(app, ui_demo, path="/")
 # Note: Since Gradio is mounted at /, this endpoint might be shadowed,
 # but HF health checks usually follow redirects or handle Gradio. 
 # We keep it as a fallback /health is also available.
+@app.get("/health")
 @app.get("/api/status")
 async def status_check():
     return JSONResponse({

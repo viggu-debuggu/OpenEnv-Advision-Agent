@@ -1,15 +1,6 @@
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
-try:
-    from openenv.core.env_server.types import Action, Observation
-except ImportError:
-    # Fallbacks for scripts that don't have openenv-core
-    class Action(BaseModel):
-        pass
-    class Observation(BaseModel):
-        done: bool = False
-        reward: Optional[float] = None
-        metadata: dict = Field(default_factory=dict)
+from openenv.core.env_server.types import Action, Observation, State
 
 class AdVisionObservation(Observation):
     detected_surfaces: List[Dict[str, Any]] = Field(default_factory=list)
@@ -26,6 +17,12 @@ class AdVisionAction(Action):
     tilt: float = Field(0.0)
     ad_selection: float = Field(0.0)
     alpha: float = Field(0.97)
+
+class AdVisionState(State):
+    max_frames: int = 0
+    video_path: str = ""
+    detected_surfaces_count: int = 0
+    history_len: int = 0
 
 class Reward(BaseModel):
     placement_reward: float = 0.0
