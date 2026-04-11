@@ -116,34 +116,15 @@ def log_end(success: bool, steps: int, rewards: List[float]):
 # LLM action generation
 # ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT = """You are an AI agent controlling an advertisement placement system.
-You observe a video scene and must output action parameters to place an ad realistically.
-Output ONLY valid JSON with these exact keys:
-{
-  "x_position":   float (-0.5 to 0.5),
-  "y_position":   float (-0.5 to 0.5),
-  "scale":        float (0.5 to 1.5),
-  "rotation":     float (-30.0 to 30.0),
-  "tilt":         float (0.0 to 1.0),
-  "ad_selection": float (0.0 to 1.0),
-  "alpha":        float (0.0 to 1.0)
-}"""
+SYSTEM_PROMPT = """\
+You control an ad placement agent. Output ONLY valid JSON:
+{"x_position": float, "y_position": float, "scale": float,
+ "rotation": float, "tilt": float, "ad_selection": float, "alpha": float}
+"""
 
-def _fallback_action(step: int, obs_dict: dict = None) -> Dict[str, float]:
-    act = {
-        "x_position": 0.0, "y_position": 0.0, "scale": 1.0,
-        "rotation": 0.0, "tilt": 0.0, "ad_selection": 0.0, "alpha": 0.97,
-    }
-    if obs_dict and obs_dict.get("detected_surfaces"):
-        surfs = obs_dict["detected_surfaces"]
-        if surfs:
-            best = max(surfs, key=lambda s: s.get("area", 0))
-            cx, cy = best.get("centroid", (320, 180))
-            act["x_position"] = min(max((cx / 640.0) - 0.5, -0.5), 0.5)
-            act["y_position"] = min(max((cy / 360.0) - 0.5, -0.5), 0.5)
-            area = best.get("area", 0)
-            act["scale"] = max(0.5, min(1.5, 1.0 + (area - 0.1) * 2.0))
-    return act
+def _fallback_action(step: int, obs_dict: dict = None) -> str:
+    return '{"x_position":0.0,"y_position":0.0,"scale":1.0,"rotation":0.0,"tilt":0.0,"ad_selection":0.0,"alpha":0.97}'
+
 
 def action_to_str(act: dict) -> str:
     """FIX #6: Short readable action string, NOT a full JSON blob."""
@@ -182,12 +163,15 @@ def get_llm_action(client: OpenAI, step: int, obs_dict: dict,
             text = text.split("```")[1]
             if text.startswith("json"):
                 text = text[4:]
+        
+        # Verify it parses to dict, but return original string or reserialized string
         parsed = json.loads(text)
         required = ["x_position","y_position","scale","rotation","tilt","ad_selection","alpha"]
         for k in required:
             if k not in parsed:
-                parsed[k] = _fallback_action(step, obs_dict)[k]
-        return parsed
+                return _fallback_action(step, obs_dict)
+                
+        return json.dumps(parsed)
     except Exception as e:
         print(f"[DEBUG] LLM call failed (step {step}): {e} — using heuristic", file=sys.stderr)
         return _fallback_action(step, obs_dict)
@@ -217,13 +201,22 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
         obs = result.observation
 
         for step in range(1, MAX_STEPS + 1):
-            act_dict   = get_llm_action(client, step, obs.model_dump(), last_reward, history, task_desc)
-            action_str = action_to_str(act_dict)  # FIX #6: short string
+            act_str_json = get_llm_action(client, step, obs.model_dump(), last_reward, history, task_desc)
+            
+            # The evaluator checks the [STEP] line action string.
+            # Convert JSON back to short format for logging:
+            try:
+                act_dict = json.loads(act_str_json)
+                action_str = action_to_str(act_dict)
+            except Exception:
+                act_dict = json.loads(_fallback_action(step, obs.model_dump()))
+                action_str = action_to_str(act_dict)
 
             err = None
             try:
                 action = Action(**act_dict)
                 result = env.step(action)
+
                 obs = result.observation
                 
                 reward = float(result.reward)
