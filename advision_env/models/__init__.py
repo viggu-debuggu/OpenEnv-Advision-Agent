@@ -51,6 +51,8 @@ class AdVisionObservation(BaseModel):
     detected_surfaces: List[Any] = []
     frame_id:          int   = 0
     metadata:          dict  = {}
+    reward:            float = 0.0
+    done:              bool  = False
 
 class Reward(BaseModel):
     placement_reward: float = 0.0

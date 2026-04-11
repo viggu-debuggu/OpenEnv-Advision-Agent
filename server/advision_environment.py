@@ -78,6 +78,7 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             detected_surfaces=surf_dicts,
             scene_type=scene_type,
             placement_score=total_score,
+            frame_id=info.get('frame_idx', 0),
             frame_features=ff,
             raw_obs=obs_raw.tolist(),
             
