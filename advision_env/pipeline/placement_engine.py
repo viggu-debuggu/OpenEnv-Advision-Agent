@@ -27,7 +27,7 @@ class PlacementConfig:
     x_offset:          float = 0.0
     y_offset:          float = 0.0
     alpha:             float = 0.97
-    feather_px:        int   = 22        # larger -> softer edge
+    feather_px:        int   = 12        # Reduced for sharpness
     shadow_strength:   float = 0.40
     enable_shadow:     bool  = True
     respect_occlusion: bool  = True
@@ -137,8 +137,10 @@ def remove_background(img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
 def _refine_alpha_edges(alpha: np.ndarray, bgr: np.ndarray) -> np.ndarray:
     alpha_u8 = (alpha * 255).astype(np.uint8)
-    refined = cv2.bilateralFilter(alpha_u8, 9, 75, 75)
-    feathered = cv2.GaussianBlur(refined.astype(np.float32), (5, 5), 1.5)
+    # Sharper bilateral filter
+    refined = cv2.bilateralFilter(alpha_u8, 5, 50, 50)
+    # Tighter Gaussian blur for cleaner silhouette
+    feathered = cv2.GaussianBlur(refined.astype(np.float32), (3, 3), 0.8)
     feathered = np.clip(feathered / 255.0, 0, 1)
     return feathered.astype(np.float32)
 
@@ -164,12 +166,16 @@ def match_colors_to_scene(ad_bgr: np.ndarray,
         out[:,:,ch] = np.clip(
             strength * shifted + (1 - strength) * ad_lab[:,:,ch], 0, 255)
     graded = cv2.cvtColor(out.astype(np.uint8), cv2.COLOR_LAB2BGR)
-    sc_lum = max(float(sr.mean()) / 255, 0.05)
-    ad_lum = max(float(graded.mean()) / 255, 0.05)
+    # Optional Saturation Boost (30%)                NEW FIX
     gamma  = float(np.clip(np.log(sc_lum) / np.log(ad_lum), 0.4, 2.5))
     lut    = np.uint8([min(255, int((i/255)**(1/gamma)*255))
                        for i in range(256)])
-    return cv2.LUT(graded, lut)
+    graded = cv2.LUT(graded, lut)
+    
+    # Final saturation boost to make colors POP
+    hsv = cv2.cvtColor(graded, cv2.COLOR_BGR2HSV).astype(np.float32)
+    hsv[:,:,1] = np.clip(hsv[:,:,1] * 1.35, 0, 255) # 35% boost
+    return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
 
 
 # ------------------------------------------------------------------------------
