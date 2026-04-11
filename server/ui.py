@@ -15,11 +15,20 @@ from advision_env.models.vision_models import ObjectDetector, DepthEstimator
 from advision_env.pipeline.placement_engine import PlacementEngine, PlacementConfig
 from advision_env.env.reward import RewardFunction
 
-# Initialize core components
-detector = ObjectDetector()
-depth_est = DepthEstimator()
-engine = PlacementEngine()
-reward_fn = RewardFunction()
+# Core components (lazy loaded)
+detector = None
+depth_est = None
+engine = None
+reward_fn = None
+
+def load_models():
+    global detector, depth_est, engine, reward_fn
+    if detector is None:
+        detector = ObjectDetector()
+        depth_est = DepthEstimator()
+        engine = PlacementEngine()
+        reward_fn = RewardFunction()
+    return detector, depth_est, engine, reward_fn
 
 def process_video(
     input_video,
@@ -35,8 +44,10 @@ def process_video(
     if input_video is None or ad_image is None:
         return None, "Please upload both a video and an ad image."
 
-    engine.reset()
-    reward_fn.__init__() # Reset temporal history
+    det, de, eng, rf = load_models()
+    eng.reset()
+    rf.__init__() # Reset temporal history
+    
     cap = cv2.VideoCapture(input_video)
     if not cap.isOpened():
         return None, "Error: Could not open video file."
@@ -86,7 +97,7 @@ def process_video(
                 if not surfaces:
                     # Fallback to center if nothing found
                     h, w = frame.shape[:2]
-                    from advision.models.vision_models import DetectedSurface
+                    from advision_env.models.vision_models import DetectedSurface
                     mock_corners = np.array([
                         [w*0.3, h*0.3], [w*0.7, h*0.3], 
                         [w*0.7, h*0.7], [w*0.3, h*0.7]
