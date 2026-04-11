@@ -53,7 +53,10 @@ class ObjectDetector:
                     print(f"Auto-download skipped, depending on YOLO default behavior: {e}")
             self.model = YOLO(model_path)
             fp16_note = ' (FP16)' if self.half else ''
-            print(f'[v] YOLOv8{size} on {self.device}{fp16_note}')
+            print(f'[v] YOLOv8{size} on {self.device}{fp16_note} - WARMING UP...')
+            # WARMUP TO PREVENT COLD-START TIMEOUTS
+            _ = self.model(np.zeros((360, 640, 3), dtype=np.uint8), verbose=False, device=self.device, half=self.half)
+            print(f'[v] YOLOv8{size} Warmup Complete!')
         except Exception as e:
             print(f'[!] YOLO unavailable -> mock: {e}')
 
