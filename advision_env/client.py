@@ -1,7 +1,7 @@
-from openenv.core.env_client import HTTPEnvClient
+from openenv.core import SyncEnvClient
 from .models import AdVisionAction, AdVisionObservation
 
-class AdVisionEnv(HTTPEnvClient):
+class AdVisionEnv(SyncEnvClient):
     action_type = AdVisionAction
     observation_type = AdVisionObservation
     
