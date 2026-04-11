@@ -101,23 +101,24 @@ This is the ₹1 Lakh Crore Indian AdEx opportunity — and AdVision is purpose-
 ```
 AdVision/
 ├── advision_env/
-│   ├── env/                   # Gymnasium environment + reward logic (v5 Jitter Penalty)
+│   ├── env/                   # Gymnasium environment + reward logic
 │   ├── models/                # YOLOv8n · MiDaS Depth · Scene Segmenter
-│   ├── pipeline/              # ORB Homography · LAB Color Match · GrabCut Compositor
+│   ├── pipeline/              # ORB Homography · LAB Color Match · Compositor
+│   ├── client.py              # NEW: Official HTTPEnvClient implementation
+│   ├── models.py              # NEW: Pydantic Action/Observation schemas
 │   └── openenv_wrapper.py     # Task graders
 ├── server/
 │   ├── advision_environment.py# Core OpenEnv Environment logic
 │   └── app.py                 # OpenEnv server launcher (create_app)
 ├── scripts/
-│   └── generate_sample_assets.py  # Automated brand asset generator
+│   └── generate_sample_assets.py  # Brand asset generator
 ├── data/
-│   ├── ad_images/             # Brand creatives catalog (.png)
-│   ├── input_videos/          # Scene library (.mp4)
-│   └── output_videos/         # Composited output frames
-├── inference.py               # Evaluator runner compliant with OpenEnv RL format
-├── models.py                  # OpenEnv Action & Observation models
-├── openenv.yaml               # OpenEnv benchmark specification (v1.0.0)
-└── Dockerfile                 # HuggingFace Spaces deployment (optimized)
+│   ├── ad_images/             # Brand creatives
+│   ├── input_videos/          # Scene library
+│   └── output_videos/         # Composited results
+├── inference.py               # Official OpenEnv client runner
+├── openenv.yaml               # Valid OpenEnv benchmark spec
+└── Dockerfile                 # Optimized HF Spaces deployment
 ```
 
 ---
@@ -181,13 +182,13 @@ AdVision is a fully compliant **OpenEnv** Gymnasium environment, ready for autom
 
 | Dimension | Range | Controls |
 |---|---|---|
-| `surface_idx` | [0, 1] | Surface selector (maps to detected index) |
-| `x_offset` | [-0.5, 0.5] | Horizontal fine-tuning |
-| `y_offset` | [-0.5, 0.5] | Vertical fine-tuning |
+| `x_position` | [-0.5, 0.5] | Horizontal shift |
+| `y_position` | [-0.5, 0.5] | Vertical shift |
 | `scale` | [0.5, 1.5] | Ad size relative to surface |
-| `ad_idx` | [0, 1] | Brand variant selector |
-| `rotation_deg` | [-30, 30] | Clockwise rotation in degrees |
-| `perspective_tilt` | [0, 1] | 3D perspective correction |
+| `rotation` | [-30, 30] | Clockwise rotation in degrees |
+| `tilt` | [0, 1] | 3D perspective correction |
+| `ad_selection` | [0, 1] | Brand variant selector |
+| `alpha` | [0, 1] | Blend opacity (0.97 is optimal) |
 
 ### Reward Function
 
@@ -257,10 +258,10 @@ To test the environment natively against the remote Hugging Face API:
 git clone https://github.com/viggu-debuggu/OpenEnv-Advision-Agent.git
 cd OpenEnv-Advision-Agent
 
-# Install the lightweight REST dependencies
-pip install -r requirements.txt
+# Install in editable mode (including openenv-core)
+pip install -e .
 
-# Run the OpenEnv Evaluator Baseline
+# Run the official OpenEnv baseline
 python inference.py
 ```
 
@@ -296,13 +297,13 @@ Full Swagger documentation available at `/docs` after launching the server.
 ```json
 POST /step
 {
-  "surface_idx": 0.3,
-  "x_offset": 0.05,
-  "y_offset": -0.1,
+  "x_position": 0.05,
+  "y_position": -0.1,
   "scale": 0.85,
-  "ad_idx": 0.6,
-  "rotation_deg": 2.5,
-  "perspective_tilt": 0.15
+  "rotation": 2.5,
+  "tilt": 0.15,
+  "ad_selection": 0.0,
+  "alpha": 0.97
 }
 ```
 
@@ -362,22 +363,23 @@ This automatically tests the `[START]`, `[STEP]`, `[END]` strict logging schema 
 
 ```
 OpenEnv-Advision-Agent/
-├── advision_env/              # Core package
-│   ├── env/                   # Gymnasium env + reward
-│   ├── models/                # YOLOv8, MiDaS, segmenter wrappers
-│   ├── pipeline/              # ORB homography, LAB matching, compositor
+├── advision_env/              # Core Package
+│   ├── env/                   # Gymnasium env
+│   ├── models/                # ML wrappers
+│   ├── pipeline/              # AV engine
+│   ├── client.py              # Official Client
+│   ├── models.py              # Pydantic Schemas
 │   └── openenv_wrapper.py     # Task graders
 ├── server/                    # API Endpoints
 │   ├── advision_environment.py# Environment orchestrator
-│   └── app.py                 # OpenEnv Core server
-├── scripts/                   # Asset generators and utilities
-├── data/                      # Ad images, input/output videos
-├── inference.py               # RL baseline evaluation script
-├── models.py                  # OpenEnv Action and Observation definitions
-├── openenv.yaml               # OpenEnv benchmark spec v1.0.0
-├── AdVision_Colab.ipynb       # Colab demo notebook
-├── Dockerfile                 # HF Spaces container
-└── requirements.txt           # Pinned dependencies
+│   └── app.py                 # OpenEnv server
+├── scripts/                   # Generators
+├── data/                      # Assets
+├── inference.py               # RL client runner
+├── openenv.yaml               # Benchmark spec v1.0.1
+├── AdVision_Colab.ipynb       # Demo notebook
+├── Dockerfile                 # Deployment
+└── requirements.txt           # Dependency pinning
 ```
 
 ---
