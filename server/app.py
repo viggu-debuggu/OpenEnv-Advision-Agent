@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from fastapi.responses import JSONResponse
 
 # Append root path to Python path so server can import advision_env
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,9 +19,18 @@ app = create_app(
     AdVisionObservation
 )
 
+# ── Root route: required for HuggingFace Spaces health checks ─────────────────
+@app.get("/")
+async def root():
+    return JSONResponse({
+        "name": "AdVision AI",
+        "description": "OpenEnv-compliant In-Content Ad Placement Environment",
+        "status": "running",
+        "endpoints": ["/health", "/reset", "/step", "/state", "/schema", "/docs"]
+    })
+
 def main(host: str = "0.0.0.0", port: int = 7860):
     import uvicorn
-    # Make sure we read the intended port, typically 7860 for HF Spaces
     target_port = int(os.environ.get("PORT", port))
     uvicorn.run(app, host=host, port=target_port)
 
