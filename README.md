@@ -1,6 +1,6 @@
 ---
-title: AdVision AI
-emoji: 🚀
+title: AdVision AI — OpenEnv RL Environment
+emoji: 🎯
 colorFrom: blue
 colorTo: indigo
 sdk: docker
@@ -10,398 +10,363 @@ tags:
   - computer-vision
   - reinforcement-learning
   - meta-ai-hackathon
+  - ad-placement
+  - spatial-ai
 ---
 
-# 🎯 AdVision AI — Intelligent In-Content Advertising Agent
+# 🎯 AdVision AI — OpenEnv RL Environment
 
-<div align="center">
+### Meta PyTorch OpenEnv Hackathon | Real-World Spatial AI | In-Content Ad Placement
 
-[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-brightgreen)](https://openenv.ai)
-[![Live Demo](https://img.shields.io/badge/🤗%20Live%20Demo-HuggingFace-yellow)](https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://hub.docker.com)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](https://opensource.org/licenses/MIT)
-[![Meta AI Hackathon](https://img.shields.io/badge/Meta%20AI-Hackathon%202025-0467DF)](https://ai.meta.com/)
+[![OpenEnv Compliant](https://img.shields.io/badge/OpenEnv-Compliant-brightgreen)](https://openenv.ai)
+[![HuggingFace Space](https://img.shields.io/badge/🤗%20Live%20Demo-HuggingFace-yellow)](https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue)](https://hub.docker.com)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**🚀 Ads inside the content — not interrupting it.**
+**AdVision AI** is a fully OpenEnv-compliant Reinforcement Learning environment for training agents to place advertisements realistically inside video content — on walls, billboards, and surfaces — without interrupting the viewer experience.
 
-[🌍 Live Demo](https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent) · [🎬 Demo Video](https://youtu.be/oXJm7jeZ2bM) · [📖 API Docs](#-api-reference)
-
-</div>
-
----
-
-## 🎭 Phase 3: Human Evaluation Guide
-
-If you are a human judge evaluating this project for **Phase 3**, please use our **Hugging Face Live UI** (hosted at the root of the Space). 
-
-### How to Evaluate:
-1.  **Visit the Space**: [🤗 Live Demo](https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent)
-2.  **Upload a Video**: You can use your own or use one from our examples at the bottom.
-3.  **Upload an Ad**: Try a transparent PNG for the best effect.
-4.  **Check for "World-Lock"**: Notice how the ad stays perfectly stuck to the background even when the camera moves. This is powered by our **ORB Homography** engine.
-5.  **Observe the Lighting**: Our **LAB Color Transfer** grader automatically adjusts the ad's colors to match the scene's ambient lighting.
-
----
-
-## 🧠 What is AdVision AI?
-
-**AdVision AI** is a spatially-aware reinforcement learning agent that automatically detects flat surfaces in video content (walls, billboards, shelves) and duplicates photorealistic brand advertisements onto them — without any manual editing or re-filming.
-
-> Think of it as **programmatic product placement**: the same video stream can show a Santoor soap ad to viewers in rural Andhra Pradesh and a Zomato banner to viewers in urban Hyderabad — simultaneously, dynamically, and cost-free.
-
-The system is built as a strict **OpenEnv-compliant** Gymnasium environment so AI agents can be trained, evaluated, and benchmarked against standardized tasks and reward signals.
+🌍 **Live Space:** https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent  
+🎬 **Demo Video:** https://www.youtube.com/watch?v=8dDctULc_Yw  
+📦 **GitHub:** https://github.com/viggu-debuggu/OpenEnv-Advision-Agent
 
 ---
 
 ## 🛑 The Problem: The Ad-Skipping Epidemic
 
-Traditional advertising is broken for video content:
+In the digital era, traditional advertisement breaks are failing:
 
-| Pain Point | Reality |
-|---|---|
-| **Skip Rate** | 90%+ of viewers skip or mute ad breaks |
-| **Physical Product Placement** | Requires on-set presence and costs millions per brand deal |
-| **Regional Targeting** | A Hindi ad dubbed over a Telugu serial has near-zero recall |
-| **ROI** | Mass-market creatives fail hyper-local regional audiences |
-
----
+- **90%+ skip rate** — viewers skip or ignore commercial breaks on TV and YouTube
+- **High Costs** — traditional product placement requires physical presence on set and costs millions
+- **Low ROI** — mass-market ads fail in hyper-local regional markets (e.g., a Hindi ad in a Telugu serial)
+- **Brand Erosion** — brands are losing visibility in an increasingly cluttered market
 
 ## 💡 The Solution: AdVision AI
 
-Instead of interrupting the viewer, AdVision **augments the scene**:
+AdVision turns every video frame into a potential ad surface. Instead of interrupting the show, we **augment** it:
 
-- 🔒 **Unskippable** — ads live *inside* the frame, not beside it
-- 🌍 **Hyper-Local** — swap creatives per region without re-rendering the source video
-- ⚡ **Fully Automated** — zero manual keyframing or rotoscoping
-- 💻 **CPU-Optimized** — runs without a GPU on standard hardware
+- **Unskippable** — ads are placed *inside* the content on walls, billboards, shelves
+- **Spatially Aware** — ORB Homography keeps the ad world-locked through camera motion
+- **Hyper-Local** — swap ads dynamically by region without re-filming
+- **RL-Trained** — an agent learns optimal placement for maximum visibility and realism
 
----
+### Real-World Case Study: Telugu Serial Targeting
 
-## 📺 Real-World Case Study: Regional Branding in Indian TV
-
-A popular Telugu serial airs across Andhra Pradesh (AP) and Telangana simultaneously.
-
-```
-Scene:  Kitchen — lead actors cooking dinner
-Surface detected: blank wall behind actors (1920×1080 frame)
-
-→ AP Viewer:       Santoor soap billboard composited onto wall
-→ Hyderabad Viewer: Zomato food delivery banner instead
-
-Same master video file. Zero re-production cost. 100% viewer retention.
-```
-
-This is the ₹1 Lakh Crore Indian AdEx opportunity — and AdVision is purpose-built for it.
+A popular Telugu serial broadcasts across Andhra Pradesh and Telangana. The AI detects a blank wall behind actors in a kitchen scene. In rural AP it surfaces a **Santoor soap** billboard; in urban Hyderabad it shows a **Zomato** banner. Same video content — multi-regional brand targeting — 100% viewer retention.
 
 ---
 
-## 🏗️ System Architecture
+## ⚙️ Environment Overview
+
+AdVision is a **multi-step RL environment** following the OpenEnv `reset → step → done` loop. An agent observes the current video frame features and detected surfaces, then outputs a 7-dimensional continuous action to place an advertisement. The environment returns a scalar reward based on placement quality, realism, and temporal stability.
+
+### Environment Spec
+
+| Property | Value |
+|---|---|
+| **Type** | Continuous action, image-based observation |
+| **Action Space** | 7-dimensional continuous (Box) |
+| **Observation Space** | 28-dimensional float vector + surface metadata |
+| **Reward Range** | [0.0, 1.0] per step |
+| **Max Steps** | 10 per episode |
+| **Tasks** | 3 (Basic Placement, Realistic Blend, Temporal Consistency) |
+| **OpenEnv Protocol** | `reset/step/state/health` via FastAPI + WebSocket |
+
+---
+
+## 🎮 Action Space
+
+The agent outputs a 7-dimensional action controlling the full spatial placement:
+
+| Field | Type | Range | Description |
+|---|---|---|---|
+| `x_position` | float | -0.5 to 0.5 | Horizontal shift on the surface |
+| `y_position` | float | -0.5 to 0.5 | Vertical shift on the surface |
+| `scale` | float | 0.5 to 1.5 | Ad size relative to surface |
+| `rotation` | float | -30.0 to 30.0 | Clockwise rotation in degrees |
+| `tilt` | float | 0.0 to 1.0 | Perspective tilt for 3D effect |
+| `ad_selection` | float | 0.0 to 1.0 | Which ad variant to display |
+| `alpha` | float | 0.0 to 1.0 | Blend opacity (0.97 = near-opaque) |
+
+---
+
+## 👁️ Observation Space
+
+The 28-dimensional observation captures scene dynamics per frame:
+
+| Field | Dimensions | Description |
+|---|---|---|
+| `mean_b`, `mean_g`, `mean_r` | 3 | Mean BGR colour channels |
+| `brightness` | 1 | Overall scene luminance |
+| `edge_density` | 1 | Proportion of edge pixels |
+| `sharpness` | 1 | Laplacian variance (focus metric) |
+| `dominant_angles` | 5 | Histogram of dominant edge orientations |
+| `surface_centroids` | 10 | X/Y centroid of top-5 detected surfaces |
+| `surface_depths` | 5 | MiDaS estimated depth per surface |
+| `detected_surfaces` | metadata | List of surface dicts with area, confidence, bounding box |
+| `scene_type` | str | Detected scene category (indoor/outdoor/urban) |
+| `placement_score` | float | Current composite reward score |
+
+---
+
+## 🏆 Reward Structure
+
+AdVision uses a composite reward combining three components:
+
+| Component | Weight | Metric | Description |
+|---|---|---|---|
+| **Placement Reward** | 0.4 | YOLO Confidence × Centroid Alignment | Is the ad on a valid surface? |
+| **Realism Reward** | 0.35 | LAB ΔE Color Match + Edge Feathering | Does the ad look realistic? |
+| **Temporal Stability** | 0.25 | L2 Drift Penalty across frames | Does the ad stay world-locked? |
+
+**Total reward = 0.4 × placement + 0.35 × realism + 0.25 × temporal**
+
+### Task Thresholds
+
+| Task | Difficulty | Success Threshold | Primary Metric |
+|---|---|---|---|
+| `task1_easy` | Easy | reward ≥ 0.70 | Placement on any detected surface |
+| `task2_medium` | Medium | reward ≥ 0.60 | Correct scale + lighting blend |
+| `task3_hard` | Hard | reward ≥ 0.80 | World-locked across moving video |
+
+---
+
+## 🚀 Quick Start
+
+### Install the Client
+
+```bash
+pip install openenv-core
+```
+
+### Connect and Run (Async)
+
+```python
+import asyncio
+from advision_env.client import AdVisionEnv
+
+async def main():
+    async with AdVisionEnv(base_url="wss://vignesh93917-openenv-advision-agent.hf.space") as env:
+        result = await env.reset()
+        obs = result.observation
+
+        for step in range(10):
+            action = {
+                "x_position": 0.0,
+                "y_position": 0.0,
+                "scale": 1.0,
+                "rotation": 0.0,
+                "tilt": 0.0,
+                "ad_selection": 0.0,
+                "alpha": 0.97,
+            }
+            result = await env.step(action)
+            print(f"Step {step+1}: reward={result.reward:.2f} done={result.done}")
+            if result.done:
+                break
+
+asyncio.run(main())
+```
+
+### Connect and Run (Sync)
+
+```python
+from advision_env.client import AdVisionEnv
+
+env = AdVisionEnv(base_url="wss://vignesh93917-openenv-advision-agent.hf.space").sync()
+
+with env:
+    result = env.reset()
+    obs = result.observation
+
+    for step in range(10):
+        action = {
+            "x_position": 0.1,
+            "y_position": -0.1,
+            "scale": 1.2,
+            "rotation": 2.0,
+            "tilt": 0.1,
+            "ad_selection": 0.5,
+            "alpha": 0.97,
+        }
+        result = env.step(action)
+        print(f"Step {step+1}: reward={result.reward:.2f} done={result.done}")
+        if result.done:
+            break
+```
+
+### Run the Inference Agent
+
+```bash
+export HF_TOKEN=your_token_here
+export API_BASE_URL=https://router.huggingface.co/v1
+export MODEL_NAME=Qwen/Qwen2.5-72B-Instruct
+export TASK_NAME=task1_easy
+
+python inference.py
+```
+
+---
+
+## 📊 Sample Evaluator Output
+
+```
+[START] task=task1_easy env=advision_env model=Qwen/Qwen2.5-72B-Instruct
+[STEP] step=1 action=place(surf=0,x=0.00,y=0.00,scale=1.00,alpha=0.97) reward=0.45 done=false error=null
+[STEP] step=2 action=place(surf=3,x=0.10,y=-0.05,scale=1.10,alpha=0.97) reward=0.58 done=false error=null
+[STEP] step=3 action=place(surf=5,x=0.12,y=-0.08,scale=1.15,alpha=0.97) reward=0.67 done=false error=null
+[STEP] step=4 action=place(surf=5,x=0.14,y=-0.10,scale=1.20,alpha=0.97) reward=0.71 done=false error=null
+[STEP] step=5 action=place(surf=5,x=0.14,y=-0.10,scale=1.20,alpha=0.97) reward=0.73 done=true error=null
+[END] success=true steps=5 rewards=0.45,0.58,0.67,0.71,0.73
+```
+
+---
+
+## 🖥️ Server Setup
+
+### Docker (Recommended)
+
+```bash
+docker build -t advision-env:latest .
+docker run --rm -p 7860:7860 advision-env:latest
+curl http://localhost:7860/health
+```
+
+Health response:
+```json
+{"status": "healthy", "service": "advision-env", "yolo_ready": true}
+```
+
+### Without Docker
+
+```bash
+git clone https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent
+cd OpenEnv_AdVision_Agent
+pip install -r requirements.txt
+pip install -e .
+uvicorn server.app:app --host 0.0.0.0 --port 7860
+```
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Health check — confirms YOLO model is loaded |
+| `POST` | `/reset` | Start a new episode, returns initial observation |
+| `POST` | `/step` | Submit action, returns observation + reward + done |
+| `GET` | `/state` | Current episode state (frame index, surfaces, scores) |
+| `GET` | `/schema` | Action and observation JSON schema |
+| `GET` | `/docs` | Swagger UI for interactive API testing |
+| `GET` | `/` | Gradio interactive UI for human evaluation |
+
+---
+
+## 🔧 Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `HF_TOKEN` | ✅ Mandatory | — | Hugging Face API token for LLM calls |
+| `API_BASE_URL` | Optional | `https://router.huggingface.co/v1` | LLM API endpoint |
+| `MODEL_NAME` | Optional | `Qwen/Qwen2.5-72B-Instruct` | LLM model for agent decisions |
+| `TASK_NAME` | Optional | `task1_easy` | Which task to run (`task1_easy`, `task2_medium`, `task3_hard`) |
+| `OPENENV_URL` | Injected by evaluator | — | Evaluator's environment server URL |
+| `ADVISION_YOLO_SIZE` | Optional | `n` | YOLO model size: n/s/m/l |
+| `ADVISION_USE_MIDAS` | Optional | `0` | Enable MiDaS depth estimation (1=on) |
+
+---
+
+## 📂 Project Architecture
 
 ```
 AdVision/
-├── advision/
-│   ├── env/                   # Gymnasium environment + reward logic
-│   ├── models/                # YOLOv8n · MiDaS Depth · Scene Segmenter
-│   ├── pipeline/              # ORB Homography · LAB Color Match · Compositor
-│   ├── client.py              # NEW: Official HTTPEnvClient implementation
-│   ├── models.py              # NEW: Pydantic Action/Observation schemas
-│   └── openenv_wrapper.py     # Task graders
+├── advision_env/                  # Core OpenEnv environment package
+│   ├── client.py                  # EnvClient subclass (AdVisionEnv)
+│   ├── env/                       # Gymnasium environment + reward logic
+│   │   └── ad_placement_env.py    # AdPlacementEnv (v5 Jitter Penalty)
+│   ├── models/                    # YOLOv8, MiDaS depth, scene segmenter
+│   ├── pipeline/                  # ORB Homography + LAB colour matching
+│   ├── openenv/
+│   │   └── tasks.py               # Task1_BasicPlacement, Task2, Task3
+│   └── openenv_wrapper.py         # OpenEnv glue layer
 ├── server/
-│   ├── advision_environment.py # Core OpenEnv Environment logic
-│   └── app.py                 # OpenEnv server launcher (create_app)
+│   ├── app.py                     # FastAPI server (Gradio UI + evaluator API)
+│   └── advision_environment.py    # OpenEnv Environment base class impl
 ├── scripts/
-│   └── generate_sample_assets.py  # Brand asset generator
+│   └── generate_sample_assets.py  # Auto-generate sample brand ad images
 ├── data/
-│   ├── ad_images/             # Brand creatives
-│   ├── input_videos/          # Scene library
-│   └── output_videos/         # Composited results
-├── inference.py               # Official OpenEnv client runner
-├── openenv.yaml               # Valid OpenEnv benchmark spec
-└── Dockerfile                 # Optimized HF Spaces deployment
+│   ├── ad_images/                 # Brand graphics (.png)
+│   └── input_videos/              # Scene videos (.mp4)
+├── inference.py                   # ✅ OpenEnv evaluator-compatible agent
+├── models.py                      # Pydantic models: Action, Observation, Reward
+├── openenv.yaml                   # OpenEnv environment specification
+├── entrypoint.sh                  # Smart entrypoint: agent mode vs server mode
+├── Dockerfile                     # CPU-optimised Docker (fits 8GB RAM)
+└── pyproject.toml                 # Package metadata
 ```
 
 ---
 
 ## ⚙️ How the Pipeline Works
 
-```
-┌──────────────┐    ┌─────────────────┐    ┌──────────────────────┐
-│  Input Video │───▶│  YOLOv8n         │───▶│  Surface Candidates  │
-│  + Brand PNG │    │  Surface Detect  │    │  (walls/boards/floors)│
-└──────────────┘    └─────────────────┘    └──────────┬───────────┘
-                                                        │
-                    ┌─────────────────┐                │
-                    │  RL Agent        │◀───────────────┘
-                    │  (SB3 PPO)       │  Observation: 28-dim state
-                    │  Selects surface │  Action: 7-dim placement vector
-                    └────────┬────────┘
-                             │
-              ┌──────────────▼─────────────────┐
-              │     Spatial Placement Engine    │
-              │  ORB Homography → World-Lock    │
-              │  GrabCut → Background Remove    │
-              │  LAB Color Transfer → Lighting  │
-              │  Gaussian Feather → Blend Edge  │
-              │  MiDaS Depth → Occlusion Fix    │
-              └──────────────┬─────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  Composited     │
-                    │  Output Video   │
-                    │  + Score Report │
-                    └─────────────────┘
-```
-
-### Step-by-Step Pipeline
-
-1. **Ingestion** — User uploads a `.mp4` video and a brand `.png` creative
-2. **Detection** — YOLOv8n identifies geometric surfaces suitable for placement
-3. **Agent Decision** — RL agent picks the optimal surface using the 28-dim scene observation
-4. **Spatial Locking** — ORB Homography tracks camera motion and pins the ad to the real-world surface
-5. **Visual Compositing** — GrabCut removes background; LAB color grading matches scene lighting; Gaussian feathering softens edges; directional shadow adds depth
-6. **Output** — High-quality composited video + placement score report returned
-
----
-
-## 🎮 OpenEnv Specification
-
-AdVision is a fully compliant **OpenEnv** Gymnasium environment, ready for automated agent evaluation.
-
-### Observation Space (28-dimensional)
-
-| Feature Group | Dimensions | Description |
-|---|---|---|
-| Scene color | 3 | Mean BGR values |
-| Scene quality | 3 | Brightness, edge density, sharpness |
-| Edge orientation | 8 | Dominant angle histogram bins |
-| Surface centroids | 10 | Top-5 surfaces: (x, y) centroid pairs |
-| Surface depth | 5 | MiDaS depth estimate per surface |
-
-### Action Space (7-dimensional, continuous)
-
-| Dimension | Range | Controls |
-|---|---|---|
-| `x_position` | [-0.5, 0.5] | Horizontal shift |
-| `y_position` | [-0.5, 0.5] | Vertical shift |
-| `scale` | [0.5, 1.5] | Ad size relative to surface |
-| `rotation` | [-30, 30] | Clockwise rotation in degrees |
-| `tilt` | [0, 1] | 3D perspective correction |
-| `ad_selection` | [0, 1] | Brand variant selector |
-| `alpha` | [0, 1] | Blend opacity (0.97 is optimal) |
-
-### Reward Function
-
-```
-Total Reward = 0.22 × realism
-             + 0.22 × alignment
-             + 0.18 × lighting
-             + 0.18 × occlusion
-             + 0.10 × visibility
-             + 0.10 × temporal_stability
-```
-
-| Component | Description |
-|---|---|
-| **Realism** | Edge continuity at the ad boundary |
-| **Alignment** | IoU between ad mask and detected surface mask |
-| **Lighting** | LAB luminance delta between ad and scene surroundings |
-| **Occlusion** | Depth-aware correctness (ad stays behind humans) |
-| **Visibility** | Frame coverage ratio — penalizes too small or too large |
-| **Temporal** | Corner stability with explicit L2 jitter penalty |
-
-### Task Benchmark Suite
-
-| Task ID | Difficulty | Goal | Success Threshold |
-|---|---|---|---|
-| `task1_easy` | 🟢 Easy | Place ad on any valid surface | placement_score > 0.5 in 70%+ frames |
-| `task2_medium` | 🟡 Medium | Correct scale + perspective + lighting match | alignment + lighting > 0.6 in 60%+ frames |
-| `task3_hard` | 🔴 Hard | World-locked tracking across moving camera | temporal_stability > 0.7 in 80%+ frames |
-
----
-
-## 🌟 Key Technical Innovations
-
-| Innovation | How It Works |
-|---|---|
-| **World-Lock Tracking** | ORB feature matching + Homography matrix stabilizes the ad anchor across 100% of camera movements |
-| **Depth-Aware Occlusion** | MiDaS monocular depth ensures ads stay *behind* foreground actors, not floating over them |
-| **Adaptive Lighting** | LAB color space transfer matches the ad's luminance and chroma to the exact scene lighting conditions |
-| **Jitter Penalty (v5)** | Explicit L2 drift penalty in the reward function eliminates temporal flickering artifacts |
-| **CPU-Only Runtime** | YOLOv8n + optimized compositing pipeline runs on standard CPU; no GPU dependency |
-| **OpenEnv Standard** | Standardized `[START]` `[STEP]` `[END]` protocol enables automated benchmark grading |
-
----
-
-## 📊 Scoring Dashboard
-
-| Score | What It Measures | Technical Metric |
-|---|---|---|
-| **Placement Score** | Surface quality and targeting accuracy | YOLO confidence × centroid alignment |
-| **Temporal Score** | Frame-to-frame stability | L2 drift penalty (lower jitter = higher score) |
-| **Visual Score** | Photorealistic blending quality | LAB ΔE color match + edge feathering quality |
-| **Overall Score** | Combined performance rating | Weighted aggregate across all components [0–1] |
-
----
-
-## 🚀 Quick Start
-
-### Option 1: Live Demo (No Setup)
-
-👉 **[Launch on HuggingFace Spaces](https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent)**
-
-### Option 2: Local Evaluator Setup (Client)
-
-To test the environment natively against the remote Hugging Face API:
-```bash
-# Clone the repository
-git clone https://github.com/viggu-debuggu/OpenEnv-Advision-Agent.git
-cd OpenEnv-Advision-Agent
-
-# Install in editable mode (including openenv-core)
-pip install -e .
-
-# Run the official OpenEnv baseline
-python inference.py
-```
-
-### Option 3: Local Environment Server (Backend)
-
-To run the full PyTorch/YOLO server locally without Hugging Face, you **must use Docker** to compile the heavy dependencies:
-```bash
-docker build -t advision-env .
-docker run --rm -p 7860:7860 advision-env
-```
-*(You can then run `export SPACE_URL=http://localhost:7860` before running `inference.py` to test it locally).*
-
-### Option 4: Google Colab
-
-Open [`AdVision_Colab.ipynb`](./AdVision_Colab.ipynb) in Google Colab for a zero-install walkthrough.
-
----
-
-## 📡 API Reference
-
-Full Swagger documentation available at `/docs` after launching the server.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Core system health ping to verify environment is alive |
-| `POST` | `/reset` | Re-initializes the environment instance |
-| `POST` | `/step` | Submits the action payload → returns next valid observation + reward |
-| `GET` | `/schema` | Action/Observation type registry mapping |
-| `GET` | `/schema/openapi` | Returns the server interface swagger mapping |
-
-### Example `/step` Request
-
-```json
-POST /step
-{
-  "x_position": 0.05,
-  "y_position": -0.1,
-  "scale": 0.85,
-  "rotation": 2.5,
-  "tilt": 0.15,
-  "ad_selection": 0.0,
-  "alpha": 0.97
-}
-```
+1. **Ingestion** — Video frame is extracted and passed to the detection pipeline
+2. **Detection** — YOLOv8n identifies placeable surfaces (walls, boards, floors)
+3. **Observation** — 28-dim state vector is constructed from frame features + surfaces
+4. **Agent Decision** — LLM or RL agent outputs a 7-dim placement action
+5. **Placement** — ORB Homography locks the ad to the detected surface
+6. **Visual Blending** — GrabCut + LAB Color Matching + Gaussian Feathering create realism
+7. **Reward** — Composite score (placement + realism + temporal stability) is returned
+8. **Iteration** — Agent refines placement over up to 10 steps per episode
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology |
+| Component | Technology |
 |---|---|
-| **Object Detection** | Ultralytics YOLOv8n |
-| **Depth Estimation** | Intel MiDaS (monocular depth) |
-| **Camera Tracking** | OpenCV ORB + Homography |
-| **Segmentation** | GrabCut + HSV masking |
-| **RL Framework** | Stable Baselines3 (PPO) + Gymnasium |
-| **Environment Protocol** | `openenv-core` |
-| **Deployment** | Docker on HuggingFace Spaces |
-| **Language** | Python 3.10+ |
+| **Surface Detection** | Ultralytics YOLOv8n |
+| **Spatial Tracking** | OpenCV ORB + Homography |
+| **Depth Estimation** | MiDaS (optional) |
+| **Segmentation** | GrabCut + HSV Masking |
+| **RL Framework** | Stable Baselines3 + Gymnasium |
+| **LLM Agent** | OpenAI-compatible client (Qwen2.5-72B) |
+| **Backend** | FastAPI + Uvicorn |
+| **Frontend** | Gradio 6.0 |
+| **Deployment** | Docker on HF Spaces (CPU-only) |
+| **OpenEnv** | openenv-core >= 0.2.3 |
 
 ---
 
-## 💼 Business Impact
+## 📈 Business Impact
 
 | Metric | Value |
 |---|---|
-| **Target Market** | ₹1 Lakh Crore Indian AdEx — regional OTT and broadcast |
-| **Viewer Retention** | Unskippable in-content placement vs. 90%+ skip rate for traditional breaks |
-| **Cost vs. Manual Placement** | Fully automated vs. millions per brand deal for physical product placement |
-| **Comparable Enterprise Solutions** | Mirriad, Ryff — but purpose-built for high-volume vernacular content |
-| **Regional Advantage** | Supports dynamic per-region creative swapping across all Indian languages |
+| **Market Size** | ₹1 Lakh Crore Indian AdEx market |
+| **Skip Rate Problem** | 90%+ of viewers skip traditional ad breaks |
+| **Comparable Solutions** | Mirriad, Ryff (enterprise, $millions/year) |
+| **AdVision Advantage** | Automated, CPU-optimized, hyper-local, open-source |
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Future Roadmap
 
-- [ ] **Real-Time Processing** — Live broadcast ad insertion at 30fps
-- [ ] **Multi-Region Targeting** — IP-based automatic creative swapping
-- [ ] **Product Replacement** — Replace a generic bottle with a specific branded product
-- [ ] **Analytics Dashboard** — Heatmaps of highest-visibility surface zones per show
-- [ ] **Regional Language OCR** — Detect text in regional scripts to prevent overlay conflicts
-- [ ] **RLHF Fine-Tuning** — Human feedback loop to improve placement aesthetics
-
----
-
-## ✅ OpenEnv Compliance Verification
-
-To verify the environment conforms to the OpenEnv standard locally, load the environment via the official openenv-client:
-
-```bash
-# After starting server (python -m server.app)
-python inference.py
-```
-This automatically tests the `[START]`, `[STEP]`, `[END]` strict logging schema format.
+- **Real-time Processing** — Live TV/broadcast ad insertion at 30fps
+- **Multi-Region Targeting** — Automatic ad swapping based on viewer IP/location
+- **Product Replacement** — Replace a generic bottle with a branded one in existing footage
+- **Advanced Analytics** — Heatmaps of highest-visibility surfaces across a show
+- **Regional Language OCR** — Detect text in regional languages to avoid placement overlap
 
 ---
 
-## 📁 Repository Structure
+## 🤝 Contributing & License
 
-```
-OpenEnv-Advision-Agent/
-├── advision/              # Core Package
-│   ├── env/                   # Gymnasium env
-│   ├── models/                # ML wrappers
-│   ├── pipeline/              # AV engine
-│   ├── client.py              # Official Client
-│   ├── models.py              # Pydantic Schemas
-│   └── openenv_wrapper.py     # Task graders
-├── server/                    # API Endpoints
-│   ├── advision_environment.py# Environment orchestrator
-│   └── app.py                 # OpenEnv server
-├── scripts/                   # Generators
-├── data/                      # Assets
-├── inference.py               # RL client runner
-├── openenv.yaml               # Benchmark spec v1.0.1
-├── AdVision_Colab.ipynb       # Demo notebook
-├── Dockerfile                 # Deployment
-└── requirements.txt           # Dependency pinning
-```
+Contributions are welcome! Please follow the OpenEnv contribution guidelines.  
+This project is licensed under the **MIT License**.
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome. Please follow the OpenEnv contribution guidelines and open a pull request with a clear description of your changes.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) for details.
-
----
-
-## 👤 Author
-
-**Vignesh** | [HuggingFace](https://huggingface.co/vignesh93917) | [GitHub](https://github.com/viggu-debuggu)
-
-Built with ❤️ for the **Meta AI Hackathon** — OpenEnv Track
-
----
-
-> **📌 Note for Hackathon Judges:** AdVision AI is fully OpenEnv compliant. The OpenEnv Core structure dictates `server/app.py` directly routing `/step`, mapped precisely to `openenv.yaml`. `inference.py` adheres unconditionally to the format string constraints for continuous task parsing. 
+> **Note to Meta AI Hackathon judges:** AdVision is fully OpenEnv compliant.
+> The environment exposes `/reset`, `/step`, `/state`, `/health`, and `/schema` endpoints.
+> Run `python inference.py` with `HF_TOKEN` set to execute a full evaluation episode.
+> The `entrypoint.sh` automatically switches between agent mode (when `OPENENV_URL` is injected by the evaluator) and server mode (normal HF Space operation).

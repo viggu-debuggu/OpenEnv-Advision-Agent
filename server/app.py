@@ -20,11 +20,9 @@ app = create_app(
 )
 
 
-# ── Root route: required for HuggingFace Spaces health checks ─────────────────
-# Note: Since Gradio is mounted at /, this endpoint might be shadowed,
-# but HF health checks usually follow redirects or handle Gradio. 
-# We keep it as a fallback /health is also available.
-@app.get("/")
+import gradio as gr
+from server.ui import demo
+
 @app.get("/health")
 @app.get("/api/status")
 async def status_check():
@@ -34,6 +32,9 @@ async def status_check():
         "status": "running",
         "endpoints": ["/health", "/reset", "/step", "/state", "/schema", "/docs", "/"]
     })
+
+# Mount the interactive Gradio UI at the root path for human judges
+app = gr.mount_gradio_app(app, demo, path="/")
 
 def main(host: str = "0.0.0.0", port: int = 7860):
     import uvicorn
