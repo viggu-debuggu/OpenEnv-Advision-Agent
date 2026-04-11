@@ -60,7 +60,7 @@ API_KEY = HF_TOKEN
 # Benchmark constants
 # ---------------------------------------------------------------------------
 BENCHMARK             = "advision_env"   # FIX #7: matches openenv.yaml name field
-MAX_STEPS             = 10
+MAX_STEPS             = 30
 TASK_THRESHOLDS       = {"task1_easy": 0.70, "task2_medium": 0.60, "task3_hard": 0.80}
 MAX_TOTAL_REWARD      = float(MAX_STEPS)
 
@@ -222,8 +222,15 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
             err = None
             try:
                 action = Action(**act_dict)
-                obs_new, reward, done, info = env.step(action)
+                obs_new = env.step(action)
                 obs = obs_new
+                reward_val = getattr(obs_new, "reward", 0.0)
+                done_val   = getattr(obs_new, "done", False)
+                md         = getattr(obs_new, "metadata", {})
+                info       = md.get("info", {}) if md else {}
+                
+                reward = float(reward_val)
+                done   = bool(done_val)
             except Exception as e:
                 reward = 0.0
                 done   = False
@@ -276,7 +283,13 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
             for entry in grader_history:
                 tr = entry["info"].get("typed_reward")
                 if tr:
-                    task_obj.update(float(getattr(tr, 'placement_reward', 0.0)), entry["info"])
+                    if task_id == "task1_easy":
+                        r = getattr(tr, 'placement_reward', 0.0)
+                    elif task_id == "task2_medium":
+                        r = (getattr(tr, 'placement_reward', 0.0) + getattr(tr, 'realism_reward', 0.0)) / 2.0
+                    else:  # task3_hard
+                        r = getattr(tr, 'temporal_stability_reward', 0.0)
+                    task_obj.update(float(r), entry["info"])
             grader_score = float(task_obj.grade().score)
         except Exception as ge:
             print(f"[DEBUG] Grader error: {ge}", file=sys.stderr)
@@ -310,7 +323,8 @@ def main() -> None:
     print(f"[DEBUG] Starting task={TASK_NAME} model={MODEL_NAME}", file=sys.stderr)
 
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    env    = AdVisionEnv()
+    EVAL_URL = os.getenv("OPENENV_URL", "http://localhost:7860")
+    env = AdVisionEnv(base_url=EVAL_URL)
 
     run_task(client, env, task)
 
