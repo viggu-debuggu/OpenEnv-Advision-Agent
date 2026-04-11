@@ -61,7 +61,7 @@ def log_step(step: int, action: str, reward: float, done: bool,
     err_str    = str(error).replace(" ", "_").replace("\n", "_")[:80] if error else "null"
     action_str = str(action).replace(" ", "")
     print(
-        f"[STEP]  step={step} action={action_str} "
+        f"[STEP] step={step} action={action_str} "
         f"reward={reward:.2f} done={done_str} error={err_str}",
         flush=True,
     )
@@ -70,7 +70,7 @@ def log_step(step: int, action: str, reward: float, done: bool,
 def log_end(success: bool, steps: int, rewards: List[float]) -> None:
     success_str = "true" if success else "false"
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END]   success={success_str} steps={steps} rewards={rewards_str}", flush=True)
+    print(f"[END] success={success_str} steps={steps} rewards={rewards_str}", flush=True)
 
 
 # ---------------------------------------------------------------------------

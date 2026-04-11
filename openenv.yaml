@@ -2,3 +2,4 @@ spec_version: "1"
 name: universal_agent
 type: agent
 runtime: docker
+description: "Universal OpenEnv Agent for Meta AI Hackathon Track"
