@@ -1,19 +1,15 @@
 """
-inference.py — Universal OpenEnv Agent Baseline
+inference.py — OpenEnv Universal Agent (Synchronous Version)
 ----------------------------------------------------------
-Complies with the official OpenEnv evaluation protocol:
-  - Uses GenericEnvClient (async) via .sync() wrapper
-  - Connects to the evaluator-provided OPENENV_URL (fixes circular-dep Error #1)
-  - Correctly reads reward from StepResult.reward (fixes Error #2)
-  - No fake/surrogate grader (fixes Error #3)
-  - Guarantees [STEP] and [END] are emitted even on crash (fixes Error #4)
-  - Outputs function-call action strings like click('id') (fixes Error #7)
+Official Ground-Truth pattern:
+  - Uses AdVisionEnv (SyncEnvClient) synchronously.
+  - Strict HF_TOKEN check (ValueError if missing).
+  - Proper log format [START]/[STEP]/[END] with 1-space separator.
+  - Universal Agent: Connects via OPENENV_URL.
 """
-from __future__ import annotations
-
-import json
 import os
-from typing import Any, List
+import json
+from typing import List, Any
 
 try:
     from dotenv import load_dotenv
@@ -22,201 +18,130 @@ except ImportError:
     pass
 
 from openai import OpenAI
-from openenv.core import GenericEnvClient
+from advision_env import AdVisionEnv, AdVisionAction
 
-# ---------------------------------------------------------------------------
-# Credentials
-# ---------------------------------------------------------------------------
-API_BASE_URL: str = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME: str   = os.getenv("MODEL_NAME",   "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN: str     = os.getenv("HF_TOKEN", "dummy")
+# ── Env vars (STRICT rules) ──────────────────────────────────────────────────
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME   = os.getenv("MODEL_NAME",   "Qwen/Qwen2.5-72B-Instruct")
 
-# ---------------------------------------------------------------------------
-# Fix Error #1 — connect to the EVALUATOR's env server, not our own Space
-# The evaluator injects OPENENV_URL into the container at runtime.
-# ---------------------------------------------------------------------------
-EVAL_URL: str = os.getenv(
-    "OPENENV_URL",
-    os.getenv("SPACE_URL", "http://localhost:8000"),
-)
+# Problem 5 Fix: Raise ValueError if missing
+HF_TOKEN = os.getenv("HF_TOKEN")
+if not HF_TOKEN:
+    raise ValueError("HF_TOKEN environment variable is required")
 
-# ---------------------------------------------------------------------------
-# Task / run constants (evaluator may inject these)
-# ---------------------------------------------------------------------------
-BENCHMARK:  str = os.getenv("BENCHMARK",  "miniwob")
-MAX_STEPS:  int = int(os.getenv("MAX_STEPS",  "10"))
-TASK_ID:    str = os.getenv("TASK_ID",    "default_task")
+# ── Runtime constants ────────────────────────────────────────────────────────
+EVAL_URL  = os.getenv("OPENENV_URL", os.getenv("SPACE_URL", "http://localhost:8000"))
+BENCHMARK = os.getenv("BENCHMARK",   "advision_env")
+TASK_ID   = os.getenv("TASK_ID",     "task1")
+MAX_STEPS = int(os.getenv("MAX_STEPS", "10"))
 
-
-# ---------------------------------------------------------------------------
-# Logging helpers  (must stay exactly in this format for auto-grader)
-# ---------------------------------------------------------------------------
-def log_start(task: str, env: str, model: str) -> None:
+# ── Logging (Exact format) ───────────────────────────────────────────────────
+def log_start(task: str, env: str, model: str):
     print(f"[START] task={task} env={env} model={model}", flush=True)
 
+def log_step(step: int, action: str, reward: float, done: bool, error: Any = None):
+    err_str = str(error).replace(" ", "_").replace("\n", "_")[:80] if error else "null"
+    act_str = str(action).replace(" ", "")
+    print(f"[STEP] step={step} action={act_str} reward={reward:.2f} "
+          f"done={'true' if done else 'false'} error={err_str}", flush=True)
 
-def log_step(step: int, action: str, reward: float, done: bool,
-             error: str | None = None) -> None:
-    done_str   = "true" if done else "false"
-    err_str    = str(error).replace(" ", "_").replace("\n", "_")[:80] if error else "null"
-    action_str = str(action).replace(" ", "")
-    print(
-        f"[STEP] step={step} action={action_str} "
-        f"reward={reward:.2f} done={done_str} error={err_str}",
-        flush=True,
-    )
+def log_end(success: bool, steps: int, rewards: List[float]):
+    r_str = ",".join(f"{x:.2f}" for x in rewards)
+    print(f"[END] success={'true' if success else 'false'} "
+          f"steps={steps} rewards={r_str}", flush=True)
 
+# ── LLM action generator ─────────────────────────────────────────────────────
+SYSTEM_PROMPT = """You are a universal AI agent driving an OpenEnv environment.
+Given the observation, output ONE action string on a single line.
 
-def log_end(success: bool, steps: int, rewards: List[float]) -> None:
-    success_str = "true" if success else "false"
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={success_str} steps={steps} rewards={rewards_str}", flush=True)
-
-
-# ---------------------------------------------------------------------------
-# LLM action generation
-# Fix Error #7 — output function-call strings, not raw JSON blobs
-# ---------------------------------------------------------------------------
-SYSTEM_PROMPT = """\
-You are a universal AI agent driving an OpenEnv environment.
-On each step you receive the current observation and must decide the next action.
-
-For browser / miniwob tasks output ONE function call on a single line, e.g.:
-  click('element_id')
-  type('element_id', 'some text')
-  fill('form_id')
-  scroll('element_id', 'down')
-  submit('form_id')
-
-For text/reasoning tasks output the answer or tool call as a plain string, e.g.:
+Examples:
+  click('id')
+  place_ad(x=0.1, y=-0.2, scale=1.1)
   answer('Paris')
-  execute('print(1+1)')
 
-Rules:
-- Return ONLY the action string — no JSON, no markdown, no explanation.
-- If unsure, prefer click('body') as a safe fallback.
-"""
+Return ONLY the action string. No explanation."""
 
-
-def _fallback_action() -> str:
-    return "click('body')"
-
-
-def get_llm_action(
-    client: OpenAI,
-    step: int,
-    obs: Any,
-    last_reward: float,
-    history: List[str],
-) -> str:
-    """Ask the LLM for the next action; fall back gracefully on any error."""
-    if HF_TOKEN in ("dummy", "", None):
-        return _fallback_action()
-
+def get_action(client: OpenAI, step: int, obs: Any, last_reward: float, history: List[str]) -> str:
     obs_str = json.dumps(obs, default=str) if isinstance(obs, dict) else str(obs)
-    # Trim very long observations so we don't blow past token limits
-    if len(obs_str) > 3000:
-        obs_str = obs_str[:3000] + "… [truncated]"
-
-    user_msg = (
-        f"Task: {TASK_ID}\n"
-        f"Step: {step}/{MAX_STEPS}\n"
-        f"Last reward: {last_reward:.2f}\n"
-        f"History: {history[-3:]}\n\n"
-        f"Observation:\n{obs_str}\n\n"
-        f"What is the next action?"
-    )
-
+    if len(obs_str) > 2000:
+        obs_str = obs_str[:2000] + "...[truncated]"
+        
     try:
         resp = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": user_msg},
+                {"role": "user", "content": 
+                    f"Step: {step}/{MAX_STEPS}\nLast reward: {last_reward:.2f}\n"
+                    f"Observation:\n{obs_str}\n\nNext action?"}
             ],
             temperature=0.2,
             max_tokens=80,
         )
         text = resp.choices[0].message.content.strip()
-        # Strip any accidental markdown fences
         if text.startswith("```"):
-            lines = text.splitlines()
-            text = "\n".join(l for l in lines if not l.startswith("```")).strip()
-        return text or _fallback_action()
-    except Exception as exc:  # noqa: BLE001
-        # Don't crash the agent loop — just fall back
-        print(f"[WARN] LLM error at step {step}: {exc}", flush=True)
-        return _fallback_action()
+            text = "\n".join(l for l in text.splitlines() if not l.startswith("```")).strip()
+        return text or "click('body')"
+    except Exception:
+        return "click('body')"
 
-
-# ---------------------------------------------------------------------------
-# Main agent loop
-# ---------------------------------------------------------------------------
-def run_task() -> None:
-    llm_client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+# ── Main agent loop ───────────────────────────────────────────────────────────
+def run_task():
+    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    rewards: List[float] = []
+    history: List[str] = []
+    steps_taken = 0
+    success = False
 
     log_start(task=TASK_ID, env=BENCHMARK, model=MODEL_NAME)
 
-    rewards:     List[float] = []
-    history:     List[str]   = []
-    steps_taken: int         = 0
-    success:     bool        = False
-
-    # Fix Error #4 — robust try/finally guarantees [END] is always emitted
     try:
-        async_client = GenericEnvClient(base_url=EVAL_URL)
-        env = async_client.sync()
-
+        # Use synchronous AdVisionEnv based on SyncEnvClient
+        # Problem 1 & 2 Fix: Sync pattern verified and handled via specialized client
+        env = AdVisionEnv(base_url=EVAL_URL)
+        
         with env:
-            # Reset the environment
-            reset_result = env.reset()
-            obs = reset_result.observation
+            result = env.reset()
+            obs = result.observation
 
             for step in range(1, MAX_STEPS + 1):
                 last_reward = rewards[-1] if rewards else 0.0
-                action = get_llm_action(llm_client, step, obs, last_reward, history)
+                action_str = get_action(client, step, obs, last_reward, history)
 
-                err: str | None = None
-                reward:  float  = 0.0
-                done:    bool   = False
+                reward = 0.0
+                done = False
+                err = None
 
                 try:
-                    # Fix Error #2 — read reward from StepResult, NOT from obs
-                    step_result = env.step(action)
-                    obs    = step_result.observation
-                    reward = float(step_result.reward) if step_result.reward is not None else 0.0
-                    done   = bool(step_result.done)
-                except Exception as step_exc:
-                    err  = str(step_exc)
+                    # Parse action string into Typed AdVisionAction
+                    act_obj = AdVisionAction.from_string(action_str)
+                    
+                    # Execute synchronous step
+                    result = env.step(act_obj)
+                    obs = result.observation
+                    reward = float(result.reward) if result.reward is not None else 0.0
+                    done = bool(result.done)
+                except Exception as step_err:
+                    err = str(step_err)
                     done = False
 
                 rewards.append(reward)
                 steps_taken = step
-                log_step(step=step, action=action, reward=reward, done=done, error=err)
-                history.append(f"step={step} act={action} r={reward:+.2f}")
+                history.append(f"step={step} r={reward:+.2f}")
+                log_step(step, action_str, reward, done, err)
 
                 if done:
                     break
+                    
+        success = (sum(rewards) / len(rewards)) >= 0.5 if rewards else False
 
-        # Success threshold: mean reward ≥ 0.5
-        if rewards:
-            success = (sum(rewards) / len(rewards)) >= 0.5
-
-    except Exception as outer_exc:
-        # Guarantee at least one [STEP] so the evaluator doesn't score 0 steps
+    except Exception as outer_err:
         if steps_taken == 0:
-            log_step(step=1, action="click('body')", reward=0.0, done=True,
-                     error=str(outer_exc))
+            log_step(1, "click('body')", 0.0, True, str(outer_err))
             steps_taken = 1
             rewards.append(0.0)
-
     finally:
-        log_end(success=success, steps=steps_taken, rewards=rewards)
-
-
-def main() -> None:
-    run_task()
-
+        log_end(success, steps_taken, rewards)
 
 if __name__ == "__main__":
-    main()
+    run_task()
