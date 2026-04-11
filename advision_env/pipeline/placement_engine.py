@@ -166,6 +166,11 @@ def match_colors_to_scene(ad_bgr: np.ndarray,
         out[:,:,ch] = np.clip(
             strength * shifted + (1 - strength) * ad_lab[:,:,ch], 0, 255)
     graded = cv2.cvtColor(out.astype(np.uint8), cv2.COLOR_LAB2BGR)
+    
+    # Calculate luminance for gamma correction
+    sc_lum = max(float(sr.mean()) / 255, 0.05)
+    ad_lum = max(float(graded.mean()) / 255, 0.05)
+    
     # Optional Saturation Boost (30%)                NEW FIX
     gamma  = float(np.clip(np.log(sc_lum) / np.log(ad_lum), 0.4, 2.5))
     lut    = np.uint8([min(255, int((i/255)**(1/gamma)*255))
