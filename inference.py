@@ -6,10 +6,8 @@ inference.py - AdVision OpenEnv Baseline Inference Script
 * ZERO local ML imports (no ultralytics, no torch, no cv2).
 """
 import os
-import sys
 import json
 import requests
-import time
 from typing import List, Dict, Any
 
 from openai import OpenAI
@@ -65,7 +63,7 @@ def log_step(step: int, action: str, reward: float, done: bool, error: str = Non
     done_str = "true" if done else "false"
     err_str = error.replace(" ", "_").replace("\n", "_")[:80] if error else "null"
     action = action.replace('\n', '').replace('\r', '')
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_str} error={err_str}", flush=True)
+    print(f"[STEP]  step={step} action={action} reward={reward:.2f} done={done_str} error={err_str}", flush=True)
 
 def log_end(success: bool, steps: int, rewards: List[float]):
     success_str = "true" if success else "false"
