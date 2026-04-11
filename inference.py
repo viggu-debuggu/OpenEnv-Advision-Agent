@@ -105,12 +105,10 @@ def log_step(step: int, action: str, reward: float, done: bool, error: str = Non
     # FIX #1: reward=:.2f
     print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_str} error={err_str}", flush=True)
 
-def log_end(success: bool, steps: int, rewards: List[float]):
-    success_str  = "true" if success else "false"
-    # FIX #2: rewards=:.2f
-    rewards_str  = ",".join([f"{r:.2f}" for r in rewards])
-    # FIX #3: no score= field — exactly: [END] success=... steps=... rewards=...
-    print(f"[END] success={success_str} steps={steps} rewards={rewards_str}", flush=True)
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    # FIX #10: score field mandatory exactly: [END] success=... steps=... score=... rewards=...
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 # ---------------------------------------------------------------------------
 # LLM action generation
@@ -145,7 +143,7 @@ def get_llm_action(client: OpenAI, step: int, obs_dict: dict,
         f"Detected surfaces: {len(obs_dict.get('detected_surfaces', []))}\n"
         f"Placement score: {obs_dict.get('placement_score', 0.0):.3f}\n"
         f"History (last 3): {history[-3:]}\n\n"
-        f"Choose action parameters to maximise the placement reward."
+        f"Choose action parameters to maximize the placement reward."
     )
     try:
         resp = client.chat.completions.create(
@@ -280,12 +278,10 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
                     else:  # task3_hard
                         r = getattr(tr, 'temporal_stability_reward', 0.0)
                     task_obj.update(float(r), entry["info"])
-            grader_score = float(task_obj.grade().score)
-        except Exception as ge:
-            print(f"[DEBUG] Grader error: {ge}", file=sys.stderr)
-            grader_score = raw_score
-
-        print(f"[DEBUG] Grader score: {grader_score:.4f}", file=sys.stderr)
+        # Normalized score in [0, 1]
+        score = sum(rewards) / float(MAX_STEPS) if MAX_STEPS > 0 else 0.0
+        score = min(max(score, 0.0), 1.0)
+        success = score >= SUCCESS_SCORE_THRESHOLD
 
     finally:
         try:
@@ -295,9 +291,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
             pass
 
         # FIX #9: always emitted, even on exception
-        # FIX #3: no score= field
-        # FIX #2: rewards formatted to 2dp inside log_end
-        log_end(success=success, steps=steps_taken, rewards=rewards)
+        log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
 # ---------------------------------------------------------------------------
 # Main — FIX #8: single task per invocation

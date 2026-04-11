@@ -80,7 +80,7 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             placement_score=total_score,
             frame_id=info.get('frame_idx', 0),
             frame_features=ff,
-            raw_obs=obs_raw.tolist(),
+            raw_obs=obs_raw.tolist() if hasattr(obs_raw, 'tolist') else list(obs_raw),
             
             # openenv-core Observation base properties
             reward=float(reward_val),
@@ -100,5 +100,6 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             max_frames=self.internal_env.max_frames,
             video_path=self.internal_env.video_path,
             detected_surfaces_count=len(getattr(self.internal_env, "_surfaces", [])),
-            history_len=len(self.history)
+            history_len=len(self.history),
+            done=all(h.get('done', False) for h in self.history[-1:]) if self.history else False
         )

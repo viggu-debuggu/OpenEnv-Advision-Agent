@@ -2,7 +2,12 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Any
 
 class AdVisionState(BaseModel):
-    frame_id: int = 0
+    episode_id: str = "unknown"
+    step_count: int = 0
+    max_frames: int = 30
+    video_path: str = ""
+    detected_surfaces_count: int = 0
+    history_len: int = 0
     done: bool = False
     metadata: dict = {}
 
@@ -50,6 +55,8 @@ class AdVisionObservation(BaseModel):
     placement_score:   float = 0.0
     detected_surfaces: List[Any] = []
     frame_id:          int   = 0
+    frame_features:    dict  = {}
+    raw_obs:           List[float] = []
     metadata:          dict  = {}
     reward:            float = 0.0
     done:              bool  = False
