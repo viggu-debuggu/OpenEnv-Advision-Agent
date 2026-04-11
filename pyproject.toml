@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "advision"
+name = "advision_env"
 version = "1.0.0"
 description = "AdVision OpenEnv Environment"
 dependencies = [
@@ -32,7 +32,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["advision*"]
+include = ["advision_env*"]
 
 [project.scripts]
 server = "server.app:main"

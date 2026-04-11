@@ -30,13 +30,13 @@ except ImportError:
 try:
     import openenv  # noqa: F401
 except ImportError:
-    print("Please install openenv-core: pip install openenv-core", file=sys.stderr)
-    sys.exit(1)
+    pass
+
 
 # FIX #6: Import path must match folder name on HF Space
-# If your folder is advision/, change to: from advision.openenv_wrapper import ...
-# If your folder is advision/,     keep as:   from advision.openenv_wrapper import ...
-from advision.openenv_wrapper import AdVisionEnv, grade_task1, grade_task2, grade_task3
+# If your folder is advision/, change to: from advision_env.openenv_wrapper import ...
+# If your folder is advision/,     keep as:   from advision_env.openenv_wrapper import ...
+from advision_env.openenv_wrapper import AdVisionEnv, grade_task1, grade_task2, grade_task3
 from models import Action, Reward
 
 # ---------------------------------------------------------------------------
@@ -212,7 +212,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
         obs = env.reset()
 
         for step in range(1, MAX_STEPS + 1):
-            act_dict   = get_llm_action(client, step, obs.dict(), last_reward, history, task_desc)
+            act_dict   = get_llm_action(client, step, obs.model_dump(), last_reward, history, task_desc)
             action_str = action_to_str(act_dict)  # FIX #6: short string
 
             err = None

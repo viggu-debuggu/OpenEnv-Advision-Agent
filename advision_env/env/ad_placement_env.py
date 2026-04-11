@@ -6,11 +6,11 @@ from typing import Optional, List, Dict, Any
 _root=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _root not in sys.path: sys.path.insert(0,_root)
 
-from advision.models.vision_models import (
+from advision_env.models.vision_models import (
     ObjectDetector,DepthEstimator,SceneSegmenter,
     AdSelector,SceneAnalysis,DetectedSurface)
-from advision.pipeline.placement_engine import PlacementEngine,PlacementConfig
-from advision.env.reward import RewardFunction
+from advision_env.pipeline.placement_engine import PlacementEngine,PlacementConfig
+from advision_env.env.reward import RewardFunction
 
 
 class AdPlacementEnv(gym.Env):
@@ -80,7 +80,7 @@ class AdPlacementEnv(gym.Env):
                 img = cv2.imread(p, cv2.IMREAD_UNCHANGED)
                 if img is not None:
                     # remove_background handles BGRA and BGR both
-                    from advision.pipeline.placement_engine import remove_background
+                    from advision_env.pipeline.placement_engine import remove_background
                     bgr, _alpha = remove_background(img)
                     self._ad_images.append(bgr)
         if not self._ad_images: self._ad_images=[self._default_ad()]
