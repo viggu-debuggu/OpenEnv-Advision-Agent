@@ -1,10 +1,14 @@
-from openenv.core import SyncEnvClient
-from .models import AdVisionAction, AdVisionObservation
+try:
+    from openenv.core.env_client import SyncEnvClient
+except ImportError:
+    from openenv.core.env_client import HTTPEnvClient as SyncEnvClient
+
+try:
+    from .models import AdVisionAction, AdVisionObservation, AdVisionState
+except ImportError:
+    from models import AdVisionAction, AdVisionObservation, AdVisionState
 
 class AdVisionEnv(SyncEnvClient):
     action_type = AdVisionAction
     observation_type = AdVisionObservation
-    
-    @classmethod
-    def from_docker_image(cls, image: str, **kwargs):
-        return super().from_docker_image(image, **kwargs)
+    state_type = AdVisionState

@@ -174,7 +174,8 @@ def run_task(llm_client: OpenAI, env_client: AdVisionEnv, task: dict):
             if done: break
 
         # Success is determined by the final average reward or specific task threshold
-        success = (sum(rewards)/len(rewards)) > 0.4 if rewards else False
+        grader_score = sum(rewards) / max(len(rewards), 1)
+        success = grader_score >= 0.5
 
     finally:
         log_end(success=success, steps=steps_taken, rewards=rewards)

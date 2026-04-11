@@ -91,6 +91,7 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         )
         return obs
 
+    @property
     def state(self) -> AdVisionState:
         return AdVisionState(
             episode_id=getattr(self, 'episode_id', "unknown"),
