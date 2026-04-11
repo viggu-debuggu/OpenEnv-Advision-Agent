@@ -66,4 +66,4 @@ class Task3_TemporalConsistency:
                            'checks_passed':int(sum(checks)),'checks_total':len(checks)})
 
 TASKS={'task1':Task1_BasicPlacement,'task2':Task2_RealisticBlend,'task3':Task3_TemporalConsistency}
-print('✅ tasks.py written')
+print('[OK] tasks.py imported')

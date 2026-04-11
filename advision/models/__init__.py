@@ -11,6 +11,7 @@ class AdVisionAction(BaseModel):
     y_position:   float = Field(0.0,  ge=-0.5, le=0.5)
     scale:        float = Field(1.0,  ge=0.5,  le=1.5)
     rotation:     float = Field(0.0,  ge=-30,  le=30)
+    tilt:         float = Field(0.0,  ge=0.0,  le=1.0)
     alpha:        float = Field(0.97, ge=0.0,  le=1.0)
     ad_selection: float = Field(0.0,  ge=0.0,  le=1.0)
     raw:          Optional[str] = None  # fallback for unparsed strings
@@ -35,6 +36,7 @@ class AdVisionAction(BaseModel):
                 "y_position":   float(pairs.get("y_position", pairs.get("y", 0.0))),
                 "scale":        float(pairs.get("scale", 1.0)),
                 "rotation":     float(pairs.get("rotation", 0.0)),
+                "tilt":         float(pairs.get("tilt", 0.0)),
                 "alpha":        float(pairs.get("alpha", 0.97)),
                 "ad_selection": float(pairs.get("ad_selection", 0.0)),
             }

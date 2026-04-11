@@ -32,7 +32,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["advision_env*"]
+include = ["advision*"]
 
 [project.scripts]
 server = "server.app:main"

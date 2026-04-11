@@ -11,9 +11,9 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from advision_env.models.vision_models import ObjectDetector, DepthEstimator
-from advision_env.pipeline.placement_engine import PlacementEngine, PlacementConfig
-from advision_env.env.reward import RewardFunction
+from advision.models.vision_models import ObjectDetector, DepthEstimator
+from advision.pipeline.placement_engine import PlacementEngine, PlacementConfig
+from advision.env.reward import RewardFunction
 
 # Initialize core components
 detector = ObjectDetector()
@@ -86,7 +86,7 @@ def process_video(
                 if not surfaces:
                     # Fallback to center if nothing found
                     h, w = frame.shape[:2]
-                    from advision_env.models.vision_models import DetectedSurface
+                    from advision.models.vision_models import DetectedSurface
                     mock_corners = np.array([
                         [w*0.3, h*0.3], [w*0.7, h*0.3], 
                         [w*0.7, h*0.7], [w*0.3, h*0.7]

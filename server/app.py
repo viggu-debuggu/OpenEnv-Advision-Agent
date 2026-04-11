@@ -10,8 +10,8 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 from openenv.core.env_server import create_app
-from server.advision_environment import AdVisionEnvironment
-from advision_env.models import AdVisionAction, AdVisionObservation
+from server.advisionironment import AdVisionEnvironment
+from advision.models import AdVisionAction, AdVisionObservation
 from server.ui import demo as ui_demo
 
 # This automatically handles all /reset, /step, /state, /schema endpoints

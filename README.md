@@ -100,7 +100,7 @@ This is the ₹1 Lakh Crore Indian AdEx opportunity — and AdVision is purpose-
 
 ```
 AdVision/
-├── advision_env/
+├── advision/
 │   ├── env/                   # Gymnasium environment + reward logic
 │   ├── models/                # YOLOv8n · MiDaS Depth · Scene Segmenter
 │   ├── pipeline/              # ORB Homography · LAB Color Match · Compositor
@@ -108,7 +108,7 @@ AdVision/
 │   ├── models.py              # NEW: Pydantic Action/Observation schemas
 │   └── openenv_wrapper.py     # Task graders
 ├── server/
-│   ├── advision_environment.py# Core OpenEnv Environment logic
+│   ├── advisionironment.py# Core OpenEnv Environment logic
 │   └── app.py                 # OpenEnv server launcher (create_app)
 ├── scripts/
 │   └── generate_sample_assets.py  # Brand asset generator
@@ -363,7 +363,7 @@ This automatically tests the `[START]`, `[STEP]`, `[END]` strict logging schema 
 
 ```
 OpenEnv-Advision-Agent/
-├── advision_env/              # Core Package
+├── advision/              # Core Package
 │   ├── env/                   # Gymnasium env
 │   ├── models/                # ML wrappers
 │   ├── pipeline/              # AV engine
@@ -371,7 +371,7 @@ OpenEnv-Advision-Agent/
 │   ├── models.py              # Pydantic Schemas
 │   └── openenv_wrapper.py     # Task graders
 ├── server/                    # API Endpoints
-│   ├── advision_environment.py# Environment orchestrator
+│   ├── advisionironment.py# Environment orchestrator
 │   └── app.py                 # OpenEnv server
 ├── scripts/                   # Generators
 ├── data/                      # Assets

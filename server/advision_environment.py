@@ -4,8 +4,8 @@ import numpy as np
 from typing import Optional
 
 from openenv.core.env_server import Environment
-from advision_env.models import AdVisionAction, AdVisionObservation, AdVisionState, Reward
-from advision_env.env.ad_placement_env import AdPlacementEnv
+from advision.models import AdVisionAction, AdVisionObservation, AdVisionState, Reward
+from advision.env.ad_placement_env import AdPlacementEnv
 
 class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVisionState]):
     def __init__(self):
