@@ -49,3 +49,10 @@ class AdVisionObservation(BaseModel):
     detected_surfaces: List[Any] = []
     frame_id:          int   = 0
     metadata:          dict  = {}
+
+class Reward(BaseModel):
+    placement_reward: float = 0.0
+    realism_reward: float = 0.0
+    temporal_stability_reward: float = 0.0
+    occlusion_reward: float = 0.0
+    penalty_for_flickering: float = 0.0
