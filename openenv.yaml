@@ -1,6 +1,4 @@
 spec_version: "1"
-name: advision_env
-type: environment
+name: universal_agent
+type: agent
 runtime: docker
-app: server.app:app
-port: 7860
