@@ -60,7 +60,7 @@ API_KEY = HF_TOKEN
 # Benchmark constants
 # ---------------------------------------------------------------------------
 BENCHMARK             = "advision_env"   # FIX #7: matches openenv.yaml name field
-MAX_STEPS             = 30
+MAX_STEPS             = 10
 TASK_THRESHOLDS       = {"task1_easy": 0.70, "task2_medium": 0.60, "task3_hard": 0.80}
 MAX_TOTAL_REWARD      = float(MAX_STEPS)
 
@@ -214,14 +214,13 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
 
             err = None
             try:
-                action = Action(**act_dict)
-                result = env.step(action)
+                result = env.step(act_dict)
 
                 obs = result.observation
                 
                 reward = float(result.reward)
                 done   = bool(result.done)
-                info   = result.info or {}
+                info   = getattr(result, 'info', {}) or {}
             except Exception as e:
                 reward = 0.0
                 done   = False
@@ -314,7 +313,8 @@ def main() -> None:
     print(f"[DEBUG] Starting task={TASK_NAME} model={MODEL_NAME}", file=sys.stderr)
 
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    SPACE_URL = os.getenv("SPACE_URL", "ws://localhost:7860")
+    SPACE_URL = os.getenv("OPENENV_URL",
+        os.getenv("SPACE_URL", "wss://vignesh93917-openenv-advision-agent.hf.space"))
     
     async_env = AdVisionEnv(base_url=SPACE_URL)
     env = async_env.sync()
