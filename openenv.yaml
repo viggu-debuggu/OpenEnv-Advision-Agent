@@ -25,7 +25,7 @@ environment:
     baseline_script: inference.py
 
   episode:
-    max_steps: 10
+    max_steps: 30
     reward_range: [0.0, 1.0]
 
   action_space:

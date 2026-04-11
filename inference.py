@@ -57,11 +57,12 @@ if HF_TOKEN is None:
 API_KEY = HF_TOKEN
 
 # ---------------------------------------------------------------------------
-# Benchmark constants
+# Benchmark constants (Dynamic per task)
 # ---------------------------------------------------------------------------
-BENCHMARK             = "advision_env"   # FIX #7: matches openenv.yaml name field
-MAX_STEPS             = 10
+BENCHMARK             = "advision_env"
 TASK_THRESHOLDS       = {"task1_easy": 0.70, "task2_medium": 0.60, "task3_hard": 0.80}
+TASK_STEP_LOOKUP      = {"task1_easy": 10, "task2_medium": 15, "task3_hard": 30}
+MAX_STEPS             = TASK_STEP_LOOKUP.get(os.getenv("TASK_NAME", "task1_easy"), 10)
 MAX_TOTAL_REWARD      = float(MAX_STEPS)
 
 TASK_REGISTRY = {
@@ -90,9 +91,8 @@ TASK_NAME = os.getenv("TASK_NAME", "task1_easy")
 
 # ---------------------------------------------------------------------------
 # Logging helpers — STRICTLY per hackathon spec
-# FIX #1 & #2: reward and rewards formatted to 2 decimal places
-# FIX #3: [END] has no score= field
-# FIX #4: all extra info goes to stderr
+# reward and rewards formatted to 2 decimal places
+# [END] line includes score= field
 # ---------------------------------------------------------------------------
 
 def log_start(task: str, env: str, model: str):
@@ -279,9 +279,12 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
                         r = getattr(tr, 'temporal_stability_reward', 0.0)
                     task_obj.update(float(r), entry["info"])
         # Normalized score in [0, 1]
-        score = sum(rewards) / float(MAX_STEPS) if MAX_STEPS > 0 else 0.0
+        score = sum(rewards) / float(len(rewards)) if rewards else 0.0
         score = min(max(score, 0.0), 1.0)
-        success = score >= SUCCESS_SCORE_THRESHOLD
+        
+        # Use task specific threshold
+        required = TASK_THRESHOLDS.get(task_id, 0.5)
+        success = score >= required
 
     finally:
         try:
