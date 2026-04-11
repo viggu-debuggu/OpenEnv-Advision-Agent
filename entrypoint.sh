@@ -1,12 +1,12 @@
 #!/bin/bash
-# entrypoint.sh — Smart entrypoint for AdVision Docker container.
 set -e
 
+# If evaluator injects OPENENV_URL → run as agent
 if [ -n "$OPENENV_URL" ]; then
-    echo "[entrypoint] Evaluator mode detected (OPENENV_URL=$OPENENV_URL)"
-    echo "[entrypoint] Running agent: python inference.py"
+    echo "[entrypoint] Evaluator mode detected → running inference.py"
     exec python inference.py
 else
-    echo "[entrypoint] Server mode detected — starting Gradio + FastAPI server"
+    # Normal HF Space mode → run the FastAPI + Gradio server
+    echo "[entrypoint] Server mode detected → starting uvicorn"
     exec uvicorn server.app:app --host 0.0.0.0 --port 7860
 fi
