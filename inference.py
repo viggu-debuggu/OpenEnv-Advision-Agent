@@ -55,9 +55,9 @@ API_KEY = HF_TOKEN
 # ---------------------------------------------------------------------------
 # Benchmark constants
 # ---------------------------------------------------------------------------
-BENCHMARK             = "advision"   # FIX #7: matches openenv.yaml name field
+BENCHMARK             = "advision_env"   # FIX #7: matches openenv.yaml name field
 MAX_STEPS             = 10
-SUCCESS_SCORE_THRESHOLD = 0.5
+TASK_THRESHOLDS       = {"task1_easy": 0.70, "task2_medium": 0.60, "task3_hard": 0.80}
 MAX_TOTAL_REWARD      = float(MAX_STEPS)
 
 TASK_REGISTRY = {
@@ -242,7 +242,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
         # Score
         raw_val  = sum(rewards) / max(MAX_TOTAL_REWARD, 1e-9)
         raw_score = float(np.clip(raw_val, 0.0, 1.0))
-        success  = raw_score >= SUCCESS_SCORE_THRESHOLD
+        success  = raw_score >= TASK_THRESHOLDS.get(task_id, 0.5)
 
         # Grader
         grader_history = []
