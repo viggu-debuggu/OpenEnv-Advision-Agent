@@ -35,8 +35,12 @@ except ImportError:
 
 # FIX #6: Import path must match folder name on HF Space
 # If your folder is advision/, change to: from advision_env.openenv_wrapper import ...
-# If your folder is advision/,     keep as:   from advision_env.openenv_wrapper import ...
-from advision_env.openenv_wrapper import AdVisionEnv, grade_task1, grade_task2, grade_task3
+from advision_env.client import AdVisionEnv
+from advision_env.openenv.tasks import (
+    Task1_BasicPlacement,
+    Task2_RealisticBlend,
+    Task3_TemporalConsistency,
+)
 from models import Action, Reward
 
 # ---------------------------------------------------------------------------
@@ -64,19 +68,19 @@ TASK_REGISTRY = {
     "task1_easy": {
         "id":     "task1_easy",
         "name":   "Basic Placement",
-        "grader": grade_task1,
+        "grader": Task1_BasicPlacement,
         "desc":   "Place ad on any detected surface (Placement reward > 0.5)",
     },
     "task2_medium": {
         "id":     "task2_medium",
         "name":   "Realistic Blend",
-        "grader": grade_task2,
+        "grader": Task2_RealisticBlend,
         "desc":   "Place ad with correct scale + lighting (Realism reward > 0.6)",
     },
     "task3_hard": {
         "id":     "task3_hard",
         "name":   "Temporal Consistency",
-        "grader": grade_task3,
+        "grader": Task3_TemporalConsistency,
         "desc":   "World-locked placement across moving video (Temporal > 0.7)",
     },
 }
@@ -257,10 +261,23 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
                     occlusion_reward=rc.get("occlusion", 0.0),
                     penalty_for_flickering=0.0,
                 )
-            grader_history.append({"info": {"typed_reward": tr}})
+            # Make sure we add reward_components to info for Tasks 2 and 3
+            rc_dict = {
+                "alignment": getattr(tr, 'placement_reward', 0.0),
+                "lighting": getattr(tr, 'realism_reward', 0.0),
+                "temporal": getattr(tr, 'temporal_stability_reward', 0.0),
+                "occlusion": getattr(tr, 'occlusion_reward', 0.0)
+            }
+            info_dict = {"typed_reward": tr, "reward_components": rc_dict}
+            grader_history.append({"info": info_dict})
 
         try:
-            grader_score = float(grader_fn(grader_history))
+            task_obj = grader_fn()          # instantiate the task class
+            for entry in grader_history:
+                tr = entry["info"].get("typed_reward")
+                if tr:
+                    task_obj.update(float(getattr(tr, 'placement_reward', 0.0)), entry["info"])
+            grader_score = float(task_obj.grade().score)
         except Exception as ge:
             print(f"[DEBUG] Grader error: {ge}", file=sys.stderr)
             grader_score = raw_score
