@@ -108,7 +108,7 @@ AdVision/
 │   ├── models.py              # NEW: Pydantic Action/Observation schemas
 │   └── openenv_wrapper.py     # Task graders
 ├── server/
-│   ├── advisionironment.py# Core OpenEnv Environment logic
+│   ├── advision_environment.py # Core OpenEnv Environment logic
 │   └── app.py                 # OpenEnv server launcher (create_app)
 ├── scripts/
 │   └── generate_sample_assets.py  # Brand asset generator
@@ -371,7 +371,7 @@ OpenEnv-Advision-Agent/
 │   ├── models.py              # Pydantic Schemas
 │   └── openenv_wrapper.py     # Task graders
 ├── server/                    # API Endpoints
-│   ├── advisionironment.py# Environment orchestrator
+│   ├── advision_environment.py# Environment orchestrator
 │   └── app.py                 # OpenEnv server
 ├── scripts/                   # Generators
 ├── data/                      # Assets

@@ -1,7 +1,7 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from server.advisionironment import AdVisionEnvironment
+from server.advision_environment import AdVisionEnvironment
 
 try:
     from advision.models import AdVisionAction
