@@ -27,6 +27,16 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             out.release()
 
         self.internal_env = AdPlacementEnv(video_path=dummy_video, max_frames=30)
+        
+        # Deep Warmup: Run a full reset+step cycle once to prime YOLO and OpenCV
+        try:
+            print("[server] Warming up environment pipeline...")
+            _ = self.internal_env.reset()
+            _ = self.internal_env.step(np.float32([0, 0, 0, 1.0, 0, 0, 0]))
+            print("[server] Deep Warmup Complete!")
+        except Exception as e:
+            print(f"[!] Warmup failed: {e}")
+
         self.history = []
 
     def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None, **kwargs) -> AdVisionObservation:

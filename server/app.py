@@ -38,9 +38,10 @@ app.add_middleware(
 # ------------------------------------------------------------------------------
 
 @app.get("/health", tags=["System"])
+@app.get("/", include_in_schema=False)
 def health():
-    """Liveness check for container orchestrators."""
-    return {"status": "ok", "service": "advision-openenv"}
+    """Liveness check for container orchestrators and validators."""
+    return {"status": "ok", "service": "advision-openenv", "message": "POST to /reset to start"}
 
 @app.get("/metadata", tags=["Environment"])
 def metadata():
@@ -83,7 +84,6 @@ def get_state():
 # EXTRA UTILITIES
 # ------------------------------------------------------------------------------
 
-@app.get("/", include_in_schema=False)
 @app.get("/ui", tags=["UI"])
 def ui_redirect():
     """Standard landing page for human evaluation."""
