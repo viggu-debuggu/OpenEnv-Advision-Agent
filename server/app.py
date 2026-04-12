@@ -58,21 +58,22 @@ def reset(payload: Dict[str, Any] = Body(default_factory=dict)):
     """Resets the environment and returns the initial observation."""
     seed = payload.get("seed")
     options = payload.get("options")
-    obs, info = env.reset(seed=seed, options=options)
+    obs = env.reset(seed=seed, options=options)
+    # Extract info if available, otherwise return empty dict
+    info = getattr(obs, "info", {})
     return {"observation": obs, "info": info}
 
 @app.post("/step", tags=["Environment"])
 def step(action: AdVisionAction):
     """Executes a single environment step."""
-    obs, reward, terminated, truncated, info = env.step(action)
-    done = terminated or truncated
+    obs = env.step(action)
     return {
         "observation": obs,
-        "reward": float(reward) if reward is not None else 0.0,
-        "done": done,
-        "terminated": terminated,
-        "truncated": truncated,
-        "info": info
+        "reward": float(obs.reward) if obs.reward is not None else 0.0,
+        "done": bool(obs.done),
+        "terminated": bool(obs.done),
+        "truncated": False,
+        "info": getattr(obs, "info", {})
     }
 
 @app.get("/state", tags=["Environment"])
