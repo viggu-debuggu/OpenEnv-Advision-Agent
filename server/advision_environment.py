@@ -23,13 +23,13 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         self.internal_env = AdPlacementEnv(video_path=dummy_video, max_frames=30)
         self.history = []
 
-    def reset(self) -> AdVisionObservation:
-        obs_raw, info = self.internal_env.reset()
+    def reset(self, seed: Optional[int] = None, episode_id: Optional[str] = None, **kwargs) -> AdVisionObservation:
+        obs_raw, info = self.internal_env.reset(seed=seed)
         self.history = []
-        self.episode_id = f"ep_{int(os.times().elapsed * 1000)}"
+        self.episode_id = episode_id or f"ep_{int(os.times().elapsed * 1000)}"
         return self._make_obs(obs_raw, 0.0, False, info)
 
-    def step(self, action: AdVisionAction) -> AdVisionObservation:
+    def step(self, action: AdVisionAction, timeout_s: Optional[float] = None, **kwargs) -> AdVisionObservation:
         # Pass alpha through as an override attribute so PlacementEngine uses it
         self.internal_env._override_alpha = float(action.alpha)
         internal_action = np.array([
