@@ -64,7 +64,12 @@ app = create_app(
 import gradio as gr
 from server.ui import demo
 
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
+
+@app.get("/")
+async def root_redirect():
+    html_content = '<html><head><meta http-equiv="refresh" content="0; url=/ui"></head><body></body></html>'
+    return HTMLResponse(content=html_content)
 
 
 @app.get("/health")
@@ -77,8 +82,8 @@ async def status_check():
         "endpoints": ["/", "/health", "/reset", "/step", "/state", "/schema", "/docs", "/ui"]
     })
 
-# Mount the interactive Gradio UI directly at the root
-app = gr.mount_gradio_app(app, demo, path="/")
+# Mount the interactive Gradio UI at /ui to avoid shadowing the API at root
+app = gr.mount_gradio_app(app, demo, path="/ui")
 
 def main(host: str = "0.0.0.0", port: int = 7860):
     import uvicorn
