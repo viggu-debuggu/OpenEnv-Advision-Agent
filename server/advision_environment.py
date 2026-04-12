@@ -39,12 +39,12 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
 
         self.history = []
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None, **kwargs) -> AdVisionObservation:
-        obs_raw, info = self.internal_env.reset(seed=seed, options=options)
+    def reset(self, seed: Optional[int] = None, episode_id: Optional[str] = None, **kwargs) -> AdVisionObservation:
+        obs_raw, info = self.internal_env.reset(seed=seed)
 
         # Sync to class-level state
         AdVisionEnvironment._shared_history = []
-        AdVisionEnvironment._shared_episode_id = kwargs.get('episode_id') or f"ep_{int(time.time() * 1000)}"
+        AdVisionEnvironment._shared_episode_id = episode_id or kwargs.get('episode_id') or f"ep_{int(time.time() * 1000)}"
 
         self.episode_id = AdVisionEnvironment._shared_episode_id
         self.history = AdVisionEnvironment._shared_history

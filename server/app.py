@@ -57,8 +57,11 @@ def get_schema():
 def reset(payload: Dict[str, Any] = Body(default_factory=dict)):
     """Resets the environment and returns the initial observation."""
     seed = payload.get("seed")
-    options = payload.get("options")
-    obs = env.reset(seed=seed, options=options)
+    # OpenEnv spec uses episode_id, AdVision previously used options. We support both.
+    episode_id = payload.get("episode_id") or payload.get("options", {}).get("episode_id")
+    
+    obs = env.reset(seed=seed, episode_id=episode_id)
+    
     # Extract info if available, otherwise return empty dict
     info = getattr(obs, "info", {})
     return {"observation": obs, "info": info}
@@ -105,8 +108,11 @@ import gradio as gr  # noqa: E402
 from server.ui import demo  # noqa: E402
 app = gr.mount_gradio_app(app, demo, path="/ui")
 
-if __name__ == "__main__":
+def main():
     import uvicorn
     port = int(os.environ.get("PORT", 7860))
     # Note: Using reload=False in production for performance
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    main()
