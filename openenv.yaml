@@ -58,7 +58,7 @@ tasks:
       Place the advertisement on any valid detected surface in the scene.
       Success requires the ad to predominantly overlap a geometric plane structure
       with placement reward > 0.5 in at least 70% of frames.
-    scorer: advision_env.openenv_wrapper:grade_task1
+    grader: advision_env.openenv_wrapper:grade_task1
     success_threshold: 0.70
     min_frames: 10
 
@@ -69,7 +69,7 @@ tasks:
       Place the ad with correct scale, perspective mapping, and lighting match.
       The grader evaluates alignment + lighting distributions, requiring both
       to exceed 0.60 in at least 60% of frames.
-    scorer: advision_env.openenv_wrapper:grade_task2
+    grader: advision_env.openenv_wrapper:grade_task2
     success_threshold: 0.60
     min_frames: 15
 
@@ -81,7 +81,7 @@ tasks:
       temporal consistency. Requires ORB-homography tracking to keep corners
       pinned to the same real-world surface point. Penalises L2 drift and flickering.
       Temporal stability must exceed 0.70 in 80%+ of frames.
-    scorer: advision_env.openenv_wrapper:grade_task3
+    grader: advision_env.openenv_wrapper:grade_task3
     success_threshold: 0.80
     min_frames: 30
 
