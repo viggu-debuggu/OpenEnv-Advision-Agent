@@ -67,6 +67,9 @@ from server.ui import demo
 from fastapi.responses import JSONResponse, RedirectResponse
 
 @app.get("/")
+async def root_redirect():
+    return RedirectResponse(url="/ui")
+
 @app.get("/health")
 @app.get("/api/status")
 async def status_check():
