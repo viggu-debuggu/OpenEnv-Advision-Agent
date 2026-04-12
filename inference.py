@@ -59,7 +59,7 @@ API_KEY = HF_TOKEN
 # ---------------------------------------------------------------------------
 # Benchmark constants (Dynamic per task)
 # ---------------------------------------------------------------------------
-BENCHMARK             = "advision_env"
+BENCHMARK             = "advision"
 TASK_THRESHOLDS       = {"task1_easy": 0.70, "task2_medium": 0.60, "task3_hard": 0.80}
 TASK_STEP_LOOKUP      = {"task1_easy": 10, "task2_medium": 15, "task3_hard": 30}
 MAX_STEPS             = TASK_STEP_LOOKUP.get(os.getenv("TASK_NAME", "task1_easy"), 10)
