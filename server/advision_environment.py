@@ -2,7 +2,7 @@ import os
 import cv2
 import time
 import numpy as np
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 from openenv.core.env_server import Environment
 from advision_env.models import AdVisionAction, AdVisionObservation, AdVisionState, Reward
@@ -24,11 +24,11 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         self.internal_env = AdPlacementEnv(video_path=dummy_video, max_frames=30)
         self.history = []
 
-    def reset(self, seed: Optional[int] = None, episode_id: Optional[str] = None, **kwargs) -> AdVisionObservation:
-        obs_raw, info = self.internal_env.reset(seed=seed)
+    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None, **kwargs) -> AdVisionObservation:
+        obs_raw, info = self.internal_env.reset(seed=seed, options=options)
         self.history = []
-        self.episode_id = episode_id or f"ep_{int(os.times().elapsed * 1000)}"
-        return self._make_obs(obs_raw, 0.0, False, info)
+        self.episode_id = kwargs.get('episode_id') or f"ep_{int(os.times().elapsed * 1000)}"
+        return self._make_obs(obs_raw, None, False, info)
 
     def step(self, action: AdVisionAction, timeout_s: Optional[float] = None, **kwargs) -> AdVisionObservation:
         # Pass alpha through as an override attribute so PlacementEngine uses it
@@ -104,7 +104,7 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             reward_components=reward_comp,
             
             # openenv-core Observation base properties
-            reward=float(reward_val),
+            reward=float(reward_val) if reward_val is not None else None,
             done=bool(done_val),
             metadata={
                 "info": clean_info,
