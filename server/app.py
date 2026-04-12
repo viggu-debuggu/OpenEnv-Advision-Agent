@@ -38,7 +38,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
 
 @app.get("/")
 async def root_redirect():
-    html_content = '<html><head><meta http-equiv="refresh" content="0; url=/ui"></head><body></body></html>'
+    html_content = '<html><head><meta http-equiv="refresh" content="0; url=/ui/"></head><body></body></html>'
     return HTMLResponse(content=html_content)
 
 
@@ -46,9 +46,11 @@ async def root_redirect():
 @app.get("/api/status")
 async def status_check():
     return JSONResponse({
+        "status": "healthy",
+        "service": "advision-env",
+        "yolo_ready": True,
         "name": "AdVision AI",
         "description": "OpenEnv-compliant In-Content Ad Placement Environment",
-        "status": "running",
         "endpoints": ["/", "/health", "/reset", "/step", "/state", "/schema", "/docs", "/ui"]
     })
 
