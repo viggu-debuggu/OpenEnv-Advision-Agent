@@ -36,7 +36,8 @@ class AdVisionEnv(EnvClient[AdVisionAction, AdVisionObservation, AdVisionState])
             done=payload.get("done", False)
         )
         # Attach info dictionary so the grading logic works
-        result.info = payload.get("info", {})
+        # Extracts info from obs.info if the OpenEnv core wrapper stripped it from the root payload
+        result.info = payload.get("info") or getattr(obs, "info", {})
         return result
 
     def _parse_state(self, payload: Dict[str, Any]) -> AdVisionState:
