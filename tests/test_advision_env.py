@@ -1,12 +1,9 @@
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from server.advision_environment import AdVisionEnvironment
-
-try:
-    from advision_env.models import AdVisionAction
-except ImportError:
-    from models import AdVisionAction
+from advision_env.models import AdVisionAction
 
 def test_reset():
     env = AdVisionEnvironment()

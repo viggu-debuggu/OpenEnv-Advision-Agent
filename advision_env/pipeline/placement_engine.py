@@ -13,7 +13,9 @@ FINAL FIXED VERSION -- All visual bugs solved:
   [v] FIX 7  -- Everything locked on frame-1 (100% static placement)
 """
 from __future__ import annotations
-import cv2, numpy as np, math
+import cv2
+import numpy as np
+import math
 from dataclasses import dataclass
 from typing import Tuple, Optional
 
@@ -75,7 +77,7 @@ def remove_background(img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         (hsv[:, :, 1].astype(np.int16) < 55) &   # low saturation
         (hsv[:, :, 2].astype(np.int16) > 195)     # high brightness
     ).astype(np.uint8) * 255
-    
+
     # Pass-B: near-black corner padding (some product images have black bg)
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
     black_mask = (gray < 18).astype(np.uint8) * 255
@@ -166,17 +168,17 @@ def match_colors_to_scene(ad_bgr: np.ndarray,
         out[:,:,ch] = np.clip(
             strength * shifted + (1 - strength) * ad_lab[:,:,ch], 0, 255)
     graded = cv2.cvtColor(out.astype(np.uint8), cv2.COLOR_LAB2BGR)
-    
+
     # Calculate luminance for gamma correction
     sc_lum = max(float(sr.mean()) / 255, 0.05)
     ad_lum = max(float(graded.mean()) / 255, 0.05)
-    
+
     # Optional Saturation Boost (30%)                NEW FIX
     gamma  = float(np.clip(np.log(sc_lum) / np.log(ad_lum), 0.4, 2.5))
     lut    = np.uint8([min(255, int((i/255)**(1/gamma)*255))
                        for i in range(256)])
     graded = cv2.LUT(graded, lut)
-    
+
     # Final saturation boost to make colors POP
     hsv = cv2.cvtColor(graded, cv2.COLOR_BGR2HSV).astype(np.float32)
     hsv[:,:,1] = np.clip(hsv[:,:,1] * 1.35, 0, 255) # 35% boost
@@ -297,11 +299,11 @@ class PerspectiveTransformer:
 
         dst_w = max(dst[:,0].max() - dst[:,0].min(), 1)
         dst_h = max(dst[:,1].max() - dst[:,1].min(), 1)
-        
+
         # Increase internal resolution buffer (2.0x vs 1.6x) to handle zooms better
         tw = max(aw, int(dst_w * 2.0), self.MIN_OUTPUT_PX)
         th = max(ah, int(dst_h * 2.0), self.MIN_OUTPUT_PX)
-        
+
         if tw > aw or th > ah:
             su = max(tw/max(aw,1), th/max(ah,1))
             ad_img = cv2.resize(ad_img,
@@ -312,7 +314,7 @@ class PerspectiveTransformer:
 
         src    = np.float32([[0,0],[aw,0],[aw,ah],[0,ah]])
         M      = cv2.getPerspectiveTransform(src, dst.astype(np.float32))
-        
+
         # INTER_LANCZOS4 for the final perspective warp yields the sharpest results
         warped = cv2.warpPerspective(ad_img, M, (w, h),
                                      flags=cv2.INTER_LANCZOS4,
@@ -429,20 +431,22 @@ class PersonGuard:
 #  AD SIZER
 # ------------------------------------------------------------------------------
 class AdSizer:
-    BASE = 2.0; MIN_F = 0.65; MAX_F = 0.96
+    BASE = 2.0
+    MIN_F = 0.65
+    MAX_F = 0.96
 
     def resize_ad(self, ad_img, surface_corners, frame_shape):
         sw = max(surface_corners[:,0].max() - surface_corners[:,0].min(), 1.)
         sh = max(surface_corners[:,1].max() - surface_corners[:,1].min(), 1.)
         ah, aw = ad_img.shape[:2]
-        
+
         # Use a higher factor (2.0) to preserve detail before the warp
         sc  = max((sw*self.MIN_F)/max(aw,1), (sh*self.MIN_F)/max(ah,1)) * self.BASE
         sc  = min(sc, max((sw*self.MAX_F)/max(aw,1), (sh*self.MAX_F)/max(ah,1)))
         sc  = float(np.clip(max(sc, 120./max(aw,1)), 0.1, 10.))
         nw  = max(int(aw*sc), 48)
         nh  = max(int(ah*sc), 48)
-        
+
         # Switch to Lanczos4 for high-quality initial sizing
         return cv2.resize(ad_img, (nw, nh),
                           interpolation=cv2.INTER_LANCZOS4)
@@ -517,8 +521,10 @@ class PlacementEngine:
         ad_bgr   = self._locked_ad_bgr
         ad_alpha = self._locked_ad_alpha
 
-        cx1 = max(0, int(adj[:,0].min()));  cx2 = min(w, int(adj[:,0].max()))
-        cy1 = max(0, int(adj[:,1].min()));  cy2 = min(h, int(adj[:,1].max()))
+        cx1 = max(0, int(adj[:, 0].min()))
+        cx2 = min(w, int(adj[:, 0].max()))
+        cy1 = max(0, int(adj[:, 1].min()))
+        cy2 = min(h, int(adj[:, 1].max()))
         scene_roi = (frame[cy1:cy2, cx1:cx2]
                      if cx2 > cx1 and cy2 > cy1 else frame[:40,:40])
         ad_matched = match_colors_to_scene(ad_bgr, scene_roi, strength=0.50)

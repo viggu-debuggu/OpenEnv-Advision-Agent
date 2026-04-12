@@ -5,7 +5,7 @@ import numpy as np
 from typing import Optional, Any, Dict, List
 
 from openenv.core.env_server import Environment
-from advision_env.models import AdVisionAction, AdVisionObservation, AdVisionState, Reward
+from advision_env.models import AdVisionAction, AdVisionObservation, AdVisionState
 from advision_env.env.ad_placement_env import AdPlacementEnv
 
 class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVisionState]):
@@ -15,29 +15,30 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
 
     def __init__(self):
         super().__init__()
-        
+
         # Initialize internal gym environment
         dummy_video = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'input_videos', 'test.mp4')
         if not os.path.exists(dummy_video):
             os.makedirs(os.path.dirname(dummy_video), exist_ok=True)
             # Create a 1 sec dummy video
             out = cv2.VideoWriter(dummy_video, cv2.VideoWriter_fourcc(*'mp4v'), 30, (640, 360))
-            for i in range(30): out.write(np.zeros((360, 640, 3), dtype=np.uint8))
+            for _ in range(30):
+                out.write(np.zeros((360, 640, 3), dtype=np.uint8))
             out.release()
-            
+
         self.internal_env = AdPlacementEnv(video_path=dummy_video, max_frames=30)
         self.history = []
 
     def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None, **kwargs) -> AdVisionObservation:
         obs_raw, info = self.internal_env.reset(seed=seed, options=options)
-        
+
         # Sync to class-level state
         AdVisionEnvironment._shared_history = []
         AdVisionEnvironment._shared_episode_id = kwargs.get('episode_id') or f"ep_{int(time.time() * 1000)}"
-        
+
         self.episode_id = AdVisionEnvironment._shared_episode_id
         self.history = AdVisionEnvironment._shared_history
-        
+
         return self._make_obs(obs_raw, None, False, info)
 
     def step(self, action: AdVisionAction, timeout_s: Optional[float] = None, **kwargs) -> AdVisionObservation:
@@ -55,16 +56,16 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
 
         obs_raw, reward_float, term, trunc, info = self.internal_env.step(internal_action)
         done = term or trunc
-        
+
         obs_model = self._make_obs(obs_raw, reward_float, done, info)
-        
+
         # Sync to class-level state
         AdVisionEnvironment._shared_history.append({
             'reward_components': info.get('reward_components', {}),
             'done': done
         })
         self.history = AdVisionEnvironment._shared_history
-        
+
         return obs_model
 
     def _clean_info(self, data: Any) -> Any:
@@ -82,16 +83,16 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
     def _make_obs(self, obs_raw, reward_val, done_val, info) -> AdVisionObservation:
         scene = getattr(self.internal_env, '_scene', None)
         scene_type = scene.scene_type if scene else "unknown"
-        
+
         # Surfaces
         surfaces = getattr(self.internal_env, '_surfaces', [])
         surf_dicts = [s.to_dict() for s in surfaces]
-        
+
         # Ensure info is clean for serialization
         clean_info = self._clean_info(info)
         reward_comp = clean_info.get('reward_components', {})
         total_score = reward_comp.get('total', 0.0)
-        
+
         ff = {
             'mean_b': float(obs_raw[0]),
             'mean_g': float(obs_raw[1]),
@@ -100,7 +101,7 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             'edge_density': float(obs_raw[4]),
             'sharpness': float(obs_raw[5]),
         }
-        
+
         # Build the structured observation
         obs = AdVisionObservation(
             detected_surfaces=surf_dicts,
@@ -109,11 +110,11 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             frame_id=int(info.get('frame_idx', 0)),
             frame_features=ff,
             raw_obs=[float(x) for x in obs_raw],
-            
+
             # Critical info now mirrored at top-level to survive stripping
             info=clean_info,
             reward_components=reward_comp,
-            
+
             # openenv-core Observation base properties
             reward=float(reward_val) if reward_val is not None else None,
             done=bool(done_val),
@@ -129,7 +130,7 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         # Pull from class-level shared state for persistence
         history = AdVisionEnvironment._shared_history
         episode_id = AdVisionEnvironment._shared_episode_id
-        
+
         return AdVisionState(
             episode_id=episode_id,
             step_count=int(self.internal_env._frame_idx) if hasattr(self.internal_env, '_frame_idx') else 0,

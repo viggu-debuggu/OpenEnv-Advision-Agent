@@ -4,7 +4,7 @@ advision.openenv_wrapper
 Glue layer to provide AdVisionEnv and task graders for the OpenEnv baseline.
 """
 from typing import List, Dict, Any
-from .client import AdVisionEnv
+from .client import AdVisionEnv as AdVisionEnv
 from .openenv.tasks import Task1_BasicPlacement, Task2_RealisticBlend, Task3_TemporalConsistency
 from .models import Reward
 
@@ -13,7 +13,7 @@ def _get_tr(info: Dict[str, Any]) -> Reward:
     tr = info.get("typed_reward")
     if tr and hasattr(tr, 'placement_reward'):
         return tr
-    
+
     # Fallback: Reconstruct from reward_components
     rc = info.get("reward_components", {})
     return Reward(

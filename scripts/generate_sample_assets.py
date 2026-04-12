@@ -1,5 +1,5 @@
 import os
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 def generate_ad_file(filename, text, color1, color2, is_bottle=False):
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +14,7 @@ def generate_ad_file(filename, text, color1, color2, is_bottle=False):
     w, h = (400, 600) if is_bottle else (400, 300)
     img = Image.new("RGB", (w, h), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
-    
+
     # Background gradient
     for y in range(h):
         r = int(color1[0] + (y/h) * (color2[0] - color1[0]))

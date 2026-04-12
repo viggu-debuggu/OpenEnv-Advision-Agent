@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from pydantic import Field, BaseModel
 from openenv.core.env_server.types import Action, Observation, State
 
@@ -14,7 +14,7 @@ class AdVisionObservation(Observation):
     frame_id: int = 0
     frame_features: Dict[str, float] = Field(default_factory=dict)
     raw_obs: List[float] = Field(default_factory=list)
-    
+
     # Critical info moved to top-level to survive serialization
     info: Dict[str, Any] = Field(default_factory=dict)
     reward_components: Dict[str, float] = Field(default_factory=dict)

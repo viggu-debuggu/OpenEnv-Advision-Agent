@@ -18,7 +18,7 @@ import os
 import sys
 import json
 import numpy as np
-from typing import List, Dict, Any
+from typing import List, Dict
 from openai import OpenAI
 
 try:
@@ -41,7 +41,7 @@ from advision_env.openenv.tasks import (
     Task2_RealisticBlend,
     Task3_TemporalConsistency,
 )
-from advision_env.models import AdVisionAction, Reward
+from advision_env.models import Reward
 
 # ---------------------------------------------------------------------------
 # Credentials — strictly following hackathon checklist
@@ -107,8 +107,8 @@ def log_step(step: int, action: str, reward: float, done: bool, error: str = Non
 
 def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    # FIX #10: score field mandatory exactly: [END] success=... steps=... score=... rewards=...
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
+    # FIX #3: removed score field (not in strict spec)
+    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
 
 # ---------------------------------------------------------------------------
 # LLM action generation
@@ -161,14 +161,14 @@ def get_llm_action(client: OpenAI, step: int, obs_dict: dict,
             text = text.split("```")[1]
             if text.startswith("json"):
                 text = text[4:]
-        
+
         # Verify it parses to dict, but return original string or reserialized string
         parsed = json.loads(text)
         required = ["x_position","y_position","scale","rotation","tilt","ad_selection","alpha"]
         for k in required:
             if k not in parsed:
                 return _fallback_action(step, obs_dict)
-                
+
         return json.dumps(parsed)
     except Exception as e:
         print(f"[DEBUG] LLM call failed (step {step}): {e} — using heuristic", file=sys.stderr)
@@ -200,7 +200,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
 
         for step in range(1, MAX_STEPS + 1):
             act_str_json = get_llm_action(client, step, obs.model_dump(), last_reward, history, task_desc)
-            
+
             # The evaluator checks the [STEP] line action string.
             # Convert JSON back to short format for logging:
             try:
@@ -215,7 +215,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
                 result = env.step(act_dict)
 
                 obs = result.observation
-                
+
                 reward = float(result.reward)
                 done   = bool(result.done)
                 info   = getattr(result, 'info', {}) or {}
@@ -284,7 +284,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
         # Normalized score in [0, 1]
         score = sum(rewards) / float(len(rewards)) if rewards else 0.0
         score = min(max(score, 0.0), 1.0)
-        
+
         # Use task specific threshold
         required = TASK_THRESHOLDS.get(task_id, 0.5)
         success = score >= required
@@ -305,7 +305,7 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
 
 def main() -> None:
     task_keys = list(TASK_REGISTRY.keys()) if TASK_NAME == "all" else [TASK_NAME]
-    
+
     for tk in task_keys:
         task = TASK_REGISTRY.get(tk)
         if task is None:
@@ -318,7 +318,7 @@ def main() -> None:
         client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
         SPACE_URL = os.getenv("OPENENV_URL",
             os.getenv("SPACE_URL", "wss://vignesh93917-openenv-advision-agent.hf.space"))
-        
+
         async_env = AdVisionEnv(base_url=SPACE_URL)
         env = async_env.sync()
 

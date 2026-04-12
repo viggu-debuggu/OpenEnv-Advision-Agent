@@ -15,7 +15,7 @@ class AdVisionEnv(EnvClient[AdVisionAction, AdVisionObservation, AdVisionState])
     action_type = AdVisionAction
     observation_type = AdVisionObservation
     state_type = AdVisionState
-    
+
     def _step_payload(self, action: Any) -> Dict[str, Any]:
         if isinstance(action, dict):
             return action
@@ -29,7 +29,7 @@ class AdVisionEnv(EnvClient[AdVisionAction, AdVisionObservation, AdVisionState])
             obs = AdVisionObservation(**obs_data)
         else:
             obs = obs_data
-        
+
         result = StepResult(
             observation=obs,
             reward=payload.get("reward"),

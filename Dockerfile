@@ -22,7 +22,8 @@ RUN pip install \
     "openai>=1.0.0" \
     "pydantic>=2.0,<3.0" \
     "python-dotenv>=1.0.0" \
-    "requests>=2.28.0"
+    "requests>=2.28.0" \
+    "anthropic>=0.18.0"
 
 # ── Layer 2: CPU-only PyTorch (NO CUDA = saves ~2GB RAM) ─────────────────────
 # This is critical for staying within the 8000MB evaluator limit.

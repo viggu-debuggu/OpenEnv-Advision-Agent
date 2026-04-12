@@ -131,6 +131,22 @@ AdVision uses a composite reward combining three components:
 
 ---
 
+## 📊 Baseline Scores
+
+Evaluated using the Claude Haiku Agent (Seed 42) on a 30-frame reference video.
+
+| Task ID | Difficulty | Score | Passed | Mean Reward |
+|---|---|---|---|---|
+| `task1_basic_placement` | Easy | **1.0000** | ✅ PASS | 0.50 |
+| `task2_realistic_blend` | Medium | **0.0000** | ❌ FAIL | 0.50 |
+| `task3_temporal_consistency` | Hard | **0.9167** | ❌ FAIL | 0.50 |
+
+**Average Baseline Score: 0.6389**
+
+---
+
+---
+
 ## 🚀 Quick Start
 
 ### Install the Client
