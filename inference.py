@@ -323,11 +323,18 @@ def main() -> None:
         SPACE_URL = SPACE_URL.replace("wss://", "https://").replace("ws://", "http://")
 
         print(f"[DEBUG] Connecting to environment at {SPACE_URL}", file=sys.stderr)
-        async_env = AdVisionEnv(base_url=SPACE_URL)
-        env = async_env.sync()
-
-        with env:
-            run_task(client, env, task)
+        
+        try:
+            async_env = AdVisionEnv(base_url=SPACE_URL)
+            env = async_env.sync()
+            
+            with env:
+                run_task(client, env, task)
+        except Exception as e:
+            print(f"[CRITICAL] Failed to connect or execute task: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
 
 
 if __name__ == "__main__":
