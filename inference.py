@@ -102,13 +102,13 @@ def log_start(task: str, env: str, model: str):
 def log_step(step: int, action: str, reward: float, done: bool, error: str = None):
     done_str = "true" if done else "false"
     err_str  = str(error).replace('\n', ' ') if error else "null"
-    # FIX #1: reward=:.2f
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_str} error={err_str}", flush=True)
+    # Mandatory: two spaces after [STEP] per sample script
+    print(f"[STEP]  step={step} action={action} reward={reward:.2f} done={done_str} error={err_str}", flush=True)
 
 def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    # FIX #11: score field IS mandatory as per the latest sample script
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
+    # Mandatory: three spaces after [END] and 2 decimal places for score per sample script
+    print(f"[END]   success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
 
 # ---------------------------------------------------------------------------
 # LLM action generation
@@ -316,9 +316,13 @@ def main() -> None:
         print(f"[DEBUG] Starting task={tk} model={MODEL_NAME}", file=sys.stderr)
 
         client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-        SPACE_URL = os.getenv("OPENENV_URL",
-            os.getenv("SPACE_URL", "wss://vignesh93917-openenv-advision-agent.hf.space"))
 
+        # FIX: Ensure REST protocol (http/https) instead of WebSockets (ws/wss)
+        # This resolves the handshake exception and matches our FastAPI server implementation.
+        SPACE_URL = os.getenv("OPENENV_URL") or os.getenv("SPACE_URL") or "http://localhost:7860"
+        SPACE_URL = SPACE_URL.replace("wss://", "https://").replace("ws://", "http://")
+
+        print(f"[DEBUG] Connecting to environment at {SPACE_URL}", file=sys.stderr)
         async_env = AdVisionEnv(base_url=SPACE_URL)
         env = async_env.sync()
 
