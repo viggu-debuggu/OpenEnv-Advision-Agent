@@ -21,7 +21,7 @@ port: 7860
 
 environment:
   python:
-    entrypoint: advision_env.openenv_wrapper:AdVisionEnv
+    entrypoint: server.advision_environment:AdVisionEnvironment
     baseline_script: inference.py
 
   episode:
