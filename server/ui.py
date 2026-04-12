@@ -60,7 +60,7 @@ def process_video(
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps    = cap.get(cv2.CAP_PROP_FPS) or 30
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    max_process_frames = min(total_frames, 300) # Limit for demo
+    max_process_frames = min(total_frames, 150) # Limit for demo
 
     # Output setup
     fd, out_path = tempfile.mkstemp(suffix=".mp4")
