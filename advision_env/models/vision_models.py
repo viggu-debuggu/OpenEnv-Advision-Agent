@@ -35,28 +35,34 @@ class SceneAnalysis:
     recommended_ad_idx: int = 0
 
 
+_GLOBAL_YOLO_MODEL = None
+
+
 class ObjectDetector:
     def __init__(self, model_size='n'):
+        global _GLOBAL_YOLO_MODEL
         self.model  = None
-        # FIX: store device so YOLO can run on GPU
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.half   = torch.cuda.is_available()  # FP16 only on CUDA
         size = os.environ.get('ADVISION_YOLO_SIZE', model_size)
         try:
-            from ultralytics import YOLO
-            model_path = f'yolov8{size}.pt'
-            if not os.path.exists(model_path):
-                try:
-                    from ultralytics.utils.downloads import attempt_download_asset
-                    attempt_download_asset(model_path)
-                except Exception as e:
-                    print(f"Auto-download skipped, depending on YOLO default behavior: {e}")
-            self.model = YOLO(model_path)
-            fp16_note = ' (FP16)' if self.half else ''
-            print(f'[v] YOLOv8{size} on {self.device}{fp16_note} - WARMING UP...')
-            # WARMUP TO PREVENT COLD-START TIMEOUTS
-            _ = self.model(np.zeros((360, 640, 3), dtype=np.uint8), verbose=False, device=self.device, half=self.half)
-            print(f'[v] YOLOv8{size} Warmup Complete!')
+            if _GLOBAL_YOLO_MODEL is None:
+                from ultralytics import YOLO
+                model_path = f'yolov8{size}.pt'
+                if not os.path.exists(model_path):
+                    try:
+                        from ultralytics.utils.downloads import attempt_download_asset
+                        attempt_download_asset(model_path)
+                    except Exception as e:
+                        print(f"Auto-download skipped: {e}")
+                
+                print(f'[v] YOLOv8{size} on {self.device} - WARMING UP...')
+                tmp_model = YOLO(model_path)
+                _ = tmp_model(np.zeros((360, 640, 3), dtype=np.uint8), verbose=False, device=self.device, half=self.half)
+                _GLOBAL_YOLO_MODEL = tmp_model
+                print(f'[v] YOLOv8{size} Warmup Complete!')
+            
+            self.model = _GLOBAL_YOLO_MODEL
         except Exception as e:
             print(f'[!] YOLO unavailable -> mock: {e}')
 
@@ -109,19 +115,29 @@ class ObjectDetector:
         ], [{'bbox':[int(w*.38),int(h*.25),int(w*.62),int(h*.85)],'conf':0.85,'depth':0.15}]
 
 
+_GLOBAL_MIDAS_MODEL = None
+_GLOBAL_MIDAS_TRANSFORM = None
+
+
 class DepthEstimator:
     def __init__(self):
+        global _GLOBAL_MIDAS_MODEL, _GLOBAL_MIDAS_TRANSFORM
         _torch = sys.modules['torch']
         self.device    = 'cuda' if _torch.cuda.is_available() else 'cpu'
         self.model     = None
         self.transform = None
         if os.environ.get('ADVISION_USE_MIDAS','0') == '1':
             try:
-                m = _torch.hub.load('intel-isl/MiDaS','MiDaS_small',trust_repo=True,verbose=False)
-                m.to(self.device).eval()
-                t = _torch.hub.load('intel-isl/MiDaS','transforms',trust_repo=True,verbose=False)
-                self.model = m; self.transform = t.small_transform
-                print(f'[v] MiDaS on {self.device}')
+                if _GLOBAL_MIDAS_MODEL is None:
+                    m = _torch.hub.load('intel-isl/MiDaS','MiDaS_small',trust_repo=True,verbose=False)
+                    m.to(self.device).eval()
+                    t = _torch.hub.load('intel-isl/MiDaS','transforms',trust_repo=True,verbose=False)
+                    _GLOBAL_MIDAS_MODEL = m
+                    _GLOBAL_MIDAS_TRANSFORM = t.small_transform
+                    print(f'[v] MiDaS on {self.device}')
+                
+                self.model = _GLOBAL_MIDAS_MODEL
+                self.transform = _GLOBAL_MIDAS_TRANSFORM
             except Exception as e:
                 print(f'[!] MiDaS failed -> gradient fallback: {e}')
         else:
