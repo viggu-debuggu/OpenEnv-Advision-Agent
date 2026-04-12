@@ -6,6 +6,7 @@ class AdVisionObservation(Observation):
     """
     Unified AdVision Observation model.
     Inherits reward, done, and metadata from OpenEnv Observation.
+    WE MOVE CRITICAL METADATA TO TOP-LEVEL FIELDS TO PREVENT STRIPPING BY SERVER.
     """
     detected_surfaces: List[Dict[str, Any]] = Field(default_factory=list)
     scene_type: str = "unknown"
@@ -13,6 +14,10 @@ class AdVisionObservation(Observation):
     frame_id: int = 0
     frame_features: Dict[str, float] = Field(default_factory=dict)
     raw_obs: List[float] = Field(default_factory=list)
+    
+    # Critical info moved to top-level to survive serialization
+    info: Dict[str, Any] = Field(default_factory=dict)
+    reward_components: Dict[str, float] = Field(default_factory=dict)
 
 class AdVisionAction(Action):
     """

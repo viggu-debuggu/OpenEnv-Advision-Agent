@@ -99,6 +99,10 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
             frame_features=ff,
             raw_obs=[float(x) for x in obs_raw],
             
+            # Critical info now mirrored at top-level to survive stripping
+            info=clean_info,
+            reward_components=reward_comp,
+            
             # openenv-core Observation base properties
             reward=float(reward_val),
             done=bool(done_val),

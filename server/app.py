@@ -23,6 +23,8 @@ app = create_app(
 import gradio as gr
 from server.ui import demo
 
+from fastapi.responses import JSONResponse, RedirectResponse
+
 @app.get("/health")
 @app.get("/api/status")
 async def status_check():
@@ -30,11 +32,15 @@ async def status_check():
         "name": "AdVision AI",
         "description": "OpenEnv-compliant In-Content Ad Placement Environment",
         "status": "running",
-        "endpoints": ["/health", "/reset", "/step", "/state", "/schema", "/docs", "/"]
+        "endpoints": ["/health", "/reset", "/step", "/state", "/schema", "/docs", "/ui"]
     })
 
-# Mount the interactive Gradio UI at the root path for human judges
-app = gr.mount_gradio_app(app, demo, path="/")
+@app.get("/")
+async def root_redirect():
+    return RedirectResponse(url="/ui")
+
+# Mount the interactive Gradio UI at /ui to avoid shadowing the API at root
+app = gr.mount_gradio_app(app, demo, path="/ui")
 
 def main(host: str = "0.0.0.0", port: int = 7860):
     import uvicorn
