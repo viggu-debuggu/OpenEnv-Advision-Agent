@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: advision_env
+Version: 1.0.0
+Summary: AdVision OpenEnv Environment
+Requires-Dist: openenv-core==0.2.3
+Requires-Dist: openai>=1.0.0
+Requires-Dist: pydantic<3.0,>=2.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: gymnasium>=0.29.0
+Requires-Dist: ultralytics>=8.0.0
+Requires-Dist: torch>=2.1.0
+Requires-Dist: torchvision>=0.16.0
+Requires-Dist: stable-baselines3>=2.0.0
+Requires-Dist: opencv-python-headless>=4.8.0
+Requires-Dist: matplotlib>=3.7.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: gradio>=4.0.0
+Requires-Dist: uvicorn>=0.24.0
+Requires-Dist: fastapi>=0.100.0
+Requires-Dist: imageio>=2.37.3
+Requires-Dist: imageio-ffmpeg>=0.6.0
+Requires-Dist: requests>=2.28.0
+Requires-Dist: numpy>=1.24.0
