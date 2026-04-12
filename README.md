@@ -303,7 +303,133 @@ AdVision/
 ├── openenv.yaml                   # OpenEnv environment specification
 ├── entrypoint.sh                  # Smart entrypoint: agent mode vs server mode
 ├── Dockerfile                     # CPU-optimised Docker (fits 8GB RAM)
-└── pyproject.toml                 # Package metadata
+├── pyproject.toml                 # Package metadata
+├── tests/                         # ✅ Unit and validation tests
+│   └── test_advision_env.py       # Core loop sanity checks
+```
+
+---
+
+## 🧪 Testing & Validation
+
+The `tests/` directory contains unit tests verifying the OpenEnv interface and basic loop execution:
+```bash
+pytest tests/
+```
+
+Before submission, you **must validate** the environment layout and APIs:
+```bash
+openenv validate .
+```
+
+---
+
+## 📄 OpenEnv Specification (`openenv.yaml`)
+
+Our environment configuration dictates exactly how agents and evaluators interact with the system:
+
+```yaml
+name: advision
+version: 1.0.0
+description: >
+  AdVisionEnv is a real-world spatial AI environment for evaluating agents
+  on advertisement placement in video scenes. Agents must detect surfaces,
+  select optimal placement parameters, and maintain temporal consistency
+  across frames — modeling a genuine media-production workflow.
+
+tags:
+  - computer-vision
+  - advertising
+  - spatial-reasoning
+  - video-processing
+  - real-world
+
+spec_version: "1"
+type: environment
+runtime: docker
+app: server.app:app
+port: 7860
+
+environment:
+  python:
+    entrypoint: server.advision_environment:AdVisionEnvironment
+    baseline_script: inference.py
+
+  episode:
+    max_steps: 30
+    reward_range: [0.0, 1.0]
+
+  action_space:
+    type: object
+    description: "7-dimensional continuous action space for ad placement control"
+    fields:
+      x_position:   {type: float, range: [-0.5, 0.5],   description: "Horizontal shift fraction"}
+      y_position:   {type: float, range: [-0.5, 0.5],   description: "Vertical shift fraction"}
+      scale:        {type: float, range: [0.5, 1.5],    description: "Ad size relative to surface"}
+      rotation:     {type: float, range: [-30.0, 30.0], description: "Clockwise rotation (degrees)"}
+      tilt:         {type: float, range: [0.0, 1.0],    description: "Perspective tilt severity"}
+      ad_selection: {type: float, range: [0.0, 1.0],    description: "Ad variant selector"}
+      alpha:        {type: float, range: [0.0, 1.0],    description: "Blend opacity (0.97 = near-opaque)"}
+
+  observation_space:
+    type: object
+    description: "Rich scene observation combining detected surfaces, scene features, and placement score"
+    fields:
+      detected_surfaces: {type: array,  description: "Detected placeable surfaces with bbox/centroid/depth"}
+      scene_type:        {type: string, description: "Scene classification: indoor / outdoor / urban"}
+      placement_score:   {type: float,  description: "Current step placement quality [0,1]"}
+      frame_features:    {type: object, description: "Brightness, edge density, sharpness, mean BGR"}
+      raw_obs:           {type: array,  description: "28-dim numerical feature vector"}
+
+tasks:
+  - id: task1_easy
+    name: "Basic Surface Placement"
+    difficulty: easy
+    description: >
+      Place the advertisement on any valid detected surface in the scene.
+      Success requires the ad to predominantly overlap a geometric plane structure
+      with placement reward > 0.5 in at least 70% of frames.
+    grader: advision_env.openenv_wrapper:grade_task1
+    success_threshold: 0.70
+    min_frames: 10
+
+  - id: task2_medium
+    name: "Realistic Blend Placement"
+    difficulty: medium
+    description: >
+      Place the ad with correct scale, perspective mapping, and lighting match.
+      The grader evaluates alignment + lighting distributions, requiring both
+      to exceed 0.60 in at least 60% of frames.
+    grader: advision_env.openenv_wrapper:grade_task2
+    success_threshold: 0.60
+    min_frames: 15
+
+  - id: task3_hard
+    name: "Photorealistic Temporal Tracking"
+    difficulty: hard
+    description: >
+      World-lock the advertisement across a moving camera scene with full
+      temporal consistency. Requires ORB-homography tracking to keep corners
+      pinned to the same real-world surface point. Penalises L2 drift and flickering.
+      Temporal stability must exceed 0.70 in 80%+ of frames.
+    grader: advision_env.openenv_wrapper:grade_task3
+    success_threshold: 0.80
+    min_frames: 30
+
+reward:
+  type: weighted_sum
+  components:
+    realism:    {weight: 0.22, description: "Edge continuity at ad boundary"}
+    alignment:  {weight: 0.22, description: "IoU between ad mask and surface mask"}
+    lighting:   {weight: 0.18, description: "LAB luminance match to scene surroundings"}
+    occlusion:  {weight: 0.18, description: "Depth-aware occlusion correctness"}
+    visibility: {weight: 0.10, description: "Frame coverage ratio"}
+    temporal:   {weight: 0.10, description: "Corner stability with explicit jitter penalty"}
+
+docker:
+  image: advision-env
+  build: "docker build -t advision-env ."
+  run:   "docker run --rm -e HF_TOKEN=$HF_TOKEN -e TASK_NAME=$TASK_NAME advision-env python inference.py"
 ```
 
 ---
