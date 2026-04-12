@@ -49,10 +49,23 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         
         # Keep history for State monitoring
         self.history.append({
-            'reward_components': info.get('reward_components', {})
+            'reward_components': info.get('reward_components', {}),
+            'done': done
         })
         
         return obs_model
+
+    def _clean_info(self, data: Any) -> Any:
+        """Recursively convert numpy types to JSON-serializable Python types."""
+        if isinstance(data, dict):
+            return {k: self._clean_info(v) for k, v in data.items()}
+        elif isinstance(data, (list, tuple)):
+            return [self._clean_info(v) for v in data]
+        elif isinstance(data, (np.integer, np.floating)):
+            return data.item()
+        elif isinstance(data, np.ndarray):
+            return data.tolist()
+        return data
 
     def _make_obs(self, obs_raw, reward_val, done_val, info) -> AdVisionObservation:
         scene = getattr(self.internal_env, '_scene', None)
@@ -62,7 +75,10 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         surfaces = getattr(self.internal_env, '_surfaces', [])
         surf_dicts = [s.to_dict() for s in surfaces]
         
-        total_score = info.get('reward_components', {}).get('total', 0.0)
+        # Ensure info is clean for serialization
+        clean_info = self._clean_info(info)
+        reward_comp = clean_info.get('reward_components', {})
+        total_score = reward_comp.get('total', 0.0)
         
         ff = {
             'mean_b': float(obs_raw[0]),
@@ -77,17 +93,17 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         obs = AdVisionObservation(
             detected_surfaces=surf_dicts,
             scene_type=scene_type,
-            placement_score=total_score,
-            frame_id=info.get('frame_idx', 0),
+            placement_score=float(total_score),
+            frame_id=int(info.get('frame_idx', 0)),
             frame_features=ff,
-            raw_obs=obs_raw.tolist() if hasattr(obs_raw, 'tolist') else list(obs_raw),
+            raw_obs=[float(x) for x in obs_raw],
             
             # openenv-core Observation base properties
             reward=float(reward_val),
             done=bool(done_val),
             metadata={
-                "info": info,
-                "reward_components": info.get('reward_components', {})
+                "info": clean_info,
+                "reward_components": reward_comp
             }
         )
         return obs
@@ -96,10 +112,10 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
     def state(self) -> AdVisionState:
         return AdVisionState(
             episode_id=getattr(self, 'episode_id', "unknown"),
-            step_count=self.internal_env._frame_idx if hasattr(self.internal_env, '_frame_idx') else 0,
-            max_frames=self.internal_env.max_frames,
-            video_path=self.internal_env.video_path,
+            step_count=int(self.internal_env._frame_idx) if hasattr(self.internal_env, '_frame_idx') else 0,
+            max_frames=int(self.internal_env.max_frames),
+            video_path=str(self.internal_env.video_path),
             detected_surfaces_count=len(getattr(self.internal_env, "_surfaces", [])),
             history_len=len(self.history),
-            done=all(h.get('done', False) for h in self.history[-1:]) if self.history else False
+            done=any(h.get('done', False) for h in self.history[-1:]) if self.history else False
         )

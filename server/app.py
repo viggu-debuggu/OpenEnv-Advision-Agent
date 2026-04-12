@@ -12,7 +12,7 @@ from openenv.core.env_server import create_app
 from server.advision_environment import AdVisionEnvironment
 from advision_env.models import AdVisionAction, AdVisionObservation
 
-# This automatically handles all /reset, /step, /state, /schema endpoints
+# Initialize core OpenEnv API server first to ensure route precedence
 app = create_app(
     AdVisionEnvironment,
     AdVisionAction,
