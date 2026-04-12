@@ -86,8 +86,8 @@ TASK_REGISTRY = {
     },
 }
 
-# FIX #8: Single task per run — read from env var
-TASK_NAME = os.getenv("TASK_NAME", "task1_easy")
+# FIX #8: Single task per run if specified, else run all
+TASK_NAME = os.getenv("TASK_NAME", "all")
 
 # ---------------------------------------------------------------------------
 # Logging helpers — STRICTLY per hackathon spec
@@ -304,23 +304,26 @@ def run_task(client: OpenAI, env: AdVisionEnv, task: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    task = TASK_REGISTRY.get(TASK_NAME)
-    if task is None:
-        print(f"[ERROR] Unknown TASK_NAME='{TASK_NAME}'. "
-              f"Valid: {list(TASK_REGISTRY.keys())}", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"[DEBUG] Starting task={TASK_NAME} model={MODEL_NAME}", file=sys.stderr)
-
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    SPACE_URL = os.getenv("OPENENV_URL",
-        os.getenv("SPACE_URL", "wss://vignesh93917-openenv-advision-agent.hf.space"))
+    task_keys = list(TASK_REGISTRY.keys()) if TASK_NAME == "all" else [TASK_NAME]
     
-    async_env = AdVisionEnv(base_url=SPACE_URL)
-    env = async_env.sync()
+    for tk in task_keys:
+        task = TASK_REGISTRY.get(tk)
+        if task is None:
+            print(f"[ERROR] Unknown TASK_NAME='{tk}'. "
+                  f"Valid: {list(TASK_REGISTRY.keys())}", file=sys.stderr)
+            continue
 
-    with env:
-        run_task(client, env, task)
+        print(f"[DEBUG] Starting task={tk} model={MODEL_NAME}", file=sys.stderr)
+
+        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+        SPACE_URL = os.getenv("OPENENV_URL",
+            os.getenv("SPACE_URL", "wss://vignesh93917-openenv-advision-agent.hf.space"))
+        
+        async_env = AdVisionEnv(base_url=SPACE_URL)
+        env = async_env.sync()
+
+        with env:
+            run_task(client, env, task)
 
 
 if __name__ == "__main__":
