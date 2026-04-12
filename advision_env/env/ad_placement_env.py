@@ -111,15 +111,39 @@ class AdPlacementEnv(gym.Env):
         # Unpack 7-dim action
         surf_n, x_off, y_off, scale, ad_n, rot_deg, persp_tilt = action
 
-        n_surf=max(1,len(self._surfaces))
+        # Safety Check for Surfaces
+        n_surf = len(self._surfaces)
+        if n_surf == 0:
+            # Fallback: create a dummy surface if everything failed
+            h, w = (self._frame.shape[:2] if self._frame is not None else (360, 640))
+            self._surfaces = [DetectedSurface(
+                bbox=(0, 0, w, h), confidence=0.0, class_name='none',
+                area=1.0, centroid=(w/2, h/2),
+                corners=np.float32([[0,0],[w,0],[w,h],[0,h]])
+            )]
+            n_surf = 1
+
         if self._locked_si is None:
-            self._locked_si=min(int(surf_n*n_surf),n_surf-1)
+            self._locked_si=min(int(surf_n*n_surf),n_surf-1) if n_surf > 1 else 0
+        
+        # Safety Check for Ad Images
+        n_ads = len(self._ad_images)
+        if n_ads == 0:
+            self._ad_images = [self._default_ad()]
+            n_ads = 1
+
         if self._locked_ai is None:
-            raw_ai=min(int(ad_n*len(self._ad_images)),len(self._ad_images)-1)
-            if self._scene and len(self._ad_images)>1:
+            raw_ai=min(int(ad_n*n_ads),n_ads-1) if n_ads > 1 else 0
+            if self._scene and n_ads>1:
                 raw_ai=self.selector.select(self._ad_images,self._scene)
             self._locked_ai=raw_ai
+            
         si=self._locked_si; ai=self._locked_ai
+        
+        # Final index safety
+        si = max(0, min(si, len(self._surfaces)-1))
+        ai = max(0, min(ai, len(self._ad_images)-1))
+        
         surface=self._surfaces[si]; ad_img=self._ad_images[ai]
 
         alpha_val = float(getattr(self, '_override_alpha', 0.97))
@@ -130,16 +154,18 @@ class AdPlacementEnv(gym.Env):
             rotation_deg=float(rot_deg),
             perspective_tilt=float(persp_tilt))
 
-        frame_before=self._frame.copy() if self._frame is not None else np.zeros((360,640,3),np.uint8)
+        frame_before = self._frame.copy() if self._frame is not None else np.zeros((360,640,3),np.uint8)
         try:
+            if self._frame is None: raise ValueError("No frame")
             result,mask,adj=self.engine.place(self._frame,ad_img,surface.corners,
                                            self._persons,self._depth_map,cfg)
             surface.corners = adj
         except Exception:
-            result=frame_before.copy(); mask=np.zeros(self._frame.shape[:2],np.uint8)
+            result=frame_before.copy()
+            mask=np.zeros(frame_before.shape[:2],np.uint8)
 
         self._last_result=result; self._last_mask=mask
-        h,w=self._frame.shape[:2]
+        h,w = frame_before.shape[:2]
         surf_mask=np.zeros((h,w),np.uint8)
         if surface.corners is not None:
             cv2.fillPoly(surf_mask,[surface.corners.astype(np.int32)],1)
@@ -218,7 +244,8 @@ class AdPlacementEnv(gym.Env):
             elif self._prev_good_surfaces:
                 self._surfaces=self._prev_good_surfaces; self._using_mock=False
             else:
-                self._surfaces=self.detector._mock(self._frame)[0]
+                mock_res = self.detector._mock(self._frame)
+                self._surfaces=mock_res[0] if mock_res and mock_res[0] else []
                 self._using_mock=True; self._mock_frames+=1
             self._depth_map=self.depth_est.estimate(self._frame)
             for s in self._surfaces:

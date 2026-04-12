@@ -48,10 +48,7 @@ async def status_check():
     return JSONResponse({
         "status": "healthy",
         "service": "advision-env",
-        "yolo_ready": True,
-        "name": "AdVision AI",
-        "description": "OpenEnv-compliant In-Content Ad Placement Environment",
-        "endpoints": ["/", "/health", "/reset", "/step", "/state", "/schema", "/docs", "/ui"]
+        "yolo_ready": True
     })
 
 # Mount the interactive Gradio UI at /ui to avoid shadowing the API at root

@@ -2,13 +2,17 @@ import os
 import cv2
 import time
 import numpy as np
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 
 from openenv.core.env_server import Environment
 from advision_env.models import AdVisionAction, AdVisionObservation, AdVisionState, Reward
 from advision_env.env.ad_placement_env import AdPlacementEnv
 
 class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVisionState]):
+    # CLASS-LEVEL STATE FOR PERSISTENCE ACROSS HTTP REQUESTS
+    _shared_episode_id: str = "unknown"
+    _shared_history: List[Dict[str, Any]] = []
+
     def __init__(self):
         super().__init__()
         
@@ -26,8 +30,14 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
 
     def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None, **kwargs) -> AdVisionObservation:
         obs_raw, info = self.internal_env.reset(seed=seed, options=options)
-        self.history = []
-        self.episode_id = kwargs.get('episode_id') or f"ep_{int(os.times().elapsed * 1000)}"
+        
+        # Sync to class-level state
+        AdVisionEnvironment._shared_history = []
+        AdVisionEnvironment._shared_episode_id = kwargs.get('episode_id') or f"ep_{int(time.time() * 1000)}"
+        
+        self.episode_id = AdVisionEnvironment._shared_episode_id
+        self.history = AdVisionEnvironment._shared_history
+        
         return self._make_obs(obs_raw, None, False, info)
 
     def step(self, action: AdVisionAction, timeout_s: Optional[float] = None, **kwargs) -> AdVisionObservation:
@@ -48,11 +58,12 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
         
         obs_model = self._make_obs(obs_raw, reward_float, done, info)
         
-        # Keep history for State monitoring
-        self.history.append({
+        # Sync to class-level state
+        AdVisionEnvironment._shared_history.append({
             'reward_components': info.get('reward_components', {}),
             'done': done
         })
+        self.history = AdVisionEnvironment._shared_history
         
         return obs_model
 
@@ -115,12 +126,16 @@ class AdVisionEnvironment(Environment[AdVisionAction, AdVisionObservation, AdVis
 
     @property
     def state(self) -> AdVisionState:
+        # Pull from class-level shared state for persistence
+        history = AdVisionEnvironment._shared_history
+        episode_id = AdVisionEnvironment._shared_episode_id
+        
         return AdVisionState(
-            episode_id=getattr(self, 'episode_id', "unknown"),
+            episode_id=episode_id,
             step_count=int(self.internal_env._frame_idx) if hasattr(self.internal_env, '_frame_idx') else 0,
             max_frames=int(self.internal_env.max_frames),
             video_path=str(self.internal_env.video_path),
             detected_surfaces_count=len(getattr(self.internal_env, "_surfaces", [])),
-            history_len=len(self.history),
-            done=any(h.get('done', False) for h in self.history[-1:]) if self.history else False
+            history_len=len(history),
+            done=any(h.get('done', False) for h in history[-1:]) if history else False
         )
