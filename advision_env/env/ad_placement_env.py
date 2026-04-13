@@ -55,8 +55,8 @@ class AdPlacementEnv(gym.Env):
 
         # 7-DIM ACTION SPACE
         self.action_space = spaces.Box(
-            low=np.float32([0., -0.2, -0.2, 0.5, 0., -30., 0.]),
-            high=np.float32([1., 0.2, 0.2, 1.5, 1., 30., 1.]),
+            low=np.float32([0., -0.5, -0.5, 0.5, 0., -30., 0.]),
+            high=np.float32([1., 0.5, 0.5, 1.5, 1., 30., 1.]),
             dtype=np.float32)
 
         self.detector = ObjectDetector()
