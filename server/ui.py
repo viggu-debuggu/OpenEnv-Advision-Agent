@@ -234,6 +234,9 @@ body, .gradio-container {
     font-weight: 400 !important;
 }
 
+.mt-20 { margin-top: 20px !important; }
+.mt-40 { margin-top: 40px !important; }
+
 .metric-card {
     background: rgba(30, 41, 59, 0.5) !important;
     border-radius: 12px !important;
@@ -273,7 +276,7 @@ footer { visibility: hidden; }
 """
 
 with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="indigo"), css=CUSTOM_CSS) as demo:
-    with gr.Div(elem_classes="header-container"):
+    with gr.Column(elem_classes="header-container"):
         gr.HTML(f"""
             <h1 class='header-title'>{TITLE}</h1>
             <p class='header-subtitle'>{SUBTITLE}</p>
@@ -285,13 +288,13 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="indigo"),
 
     with gr.Row():
         with gr.Column(scale=4):
-            with gr.Div(elem_classes="glass-card"):
+            with gr.Column(elem_classes="glass-card"):
                 gr.Markdown("### 📥 Source Media")
                 with gr.Row():
                     video_input = gr.Video(label="Scene Video", elem_id="video-input")
                     ad_input = gr.Image(label="Ad Asset (PNG preferred)", type="numpy")
             
-            with gr.Div(elem_classes="glass-card", style="margin-top: 20px;"):
+            with gr.Column(elem_classes=["glass-card", "mt-20"]):
                 gr.Markdown("### ⚙️ Placement Precision Engine")
                 with gr.Row():
                     with gr.Column():
@@ -309,23 +312,23 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="indigo"),
                 run_btn = gr.Button("✨ Render Augmented Scene", variant="primary", size="lg")
 
         with gr.Column(scale=5):
-            with gr.Div(elem_classes="glass-card"):
+            with gr.Column(elem_classes="glass-card"):
                 gr.Markdown("### 📺 Production Output")
                 video_output = gr.Video(label="Final Composite", interactive=False)
                 
-            with gr.Div(elem_classes="glass-card", style="margin-top: 20px;"):
+            with gr.Column(elem_classes=["glass-card", "mt-20"]):
                 gr.Markdown("### 📊 Performance Analytics")
                 status_text = gr.HTML(label="Agent Feedback & Rewards", elem_id="status-display")
 
-    with gr.Row(style="margin-top: 40px;"):
+    with gr.Row(elem_classes="mt-40"):
         with gr.Column():
-            with gr.Div(elem_classes="metric-card"):
+            with gr.Column(elem_classes="metric-card"):
                 gr.Markdown("#### 🟠 Spatial Reasoning\nPrecise 3D localization via monocular depth estimation.")
         with gr.Column():
-            with gr.Div(elem_classes="metric-card"):
+            with gr.Column(elem_classes="metric-card"):
                 gr.Markdown("#### 🟢 Temporal Stability\nORB-Homography tracking ensures zero pixel drift.")
         with gr.Column():
-            with gr.Div(elem_classes="metric-card"):
+            with gr.Column(elem_classes="metric-card"):
                 gr.Markdown("#### 🔵 Realistic Blending\nLAB color transfer matches ad to scene lighting.")
 
     # Fix Example Paths
