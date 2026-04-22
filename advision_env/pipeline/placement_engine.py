@@ -139,10 +139,10 @@ def remove_background(img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
 def _refine_alpha_edges(alpha: np.ndarray, bgr: np.ndarray) -> np.ndarray:
     alpha_u8 = (alpha * 255).astype(np.uint8)
-    # Sharper bilateral filter
-    refined = cv2.bilateralFilter(alpha_u8, 5, 50, 50)
-    # Tighter Gaussian blur for cleaner silhouette
-    feathered = cv2.GaussianBlur(refined.astype(np.float32), (3, 3), 0.8)
+    # Faster bilateral filter
+    refined = cv2.bilateralFilter(alpha_u8, 3, 30, 30)
+    # Tighter Gaussian blur
+    feathered = cv2.GaussianBlur(refined.astype(np.float32), (3, 3), 0.5)
     feathered = np.clip(feathered / 255.0, 0, 1)
     return feathered.astype(np.float32)
 
@@ -152,14 +152,16 @@ def _refine_alpha_edges(alpha: np.ndarray, bgr: np.ndarray) -> np.ndarray:
 # ------------------------------------------------------------------------------
 def match_colors_to_scene(ad_bgr: np.ndarray,
                            scene_region: np.ndarray,
-                           strength: float = 0.55) -> np.ndarray:
+                           strength: float = 0.45) -> np.ndarray:
     if scene_region.size < 9:
         return ad_bgr
-    sr = cv2.resize(scene_region,
-                    (ad_bgr.shape[1], ad_bgr.shape[0]),
-                    interpolation=cv2.INTER_CUBIC)
+    
+    # Use a faster mean/std calculation on a downsampled region
+    sr_small = cv2.resize(scene_region, (32, 32), interpolation=cv2.INTER_AREA)
+    
     ad_lab = cv2.cvtColor(ad_bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
-    sc_lab = cv2.cvtColor(sr,     cv2.COLOR_BGR2LAB).astype(np.float32)
+    sc_lab = cv2.cvtColor(sr_small, cv2.COLOR_BGR2LAB).astype(np.float32)
+    
     out = np.zeros_like(ad_lab)
     for ch in range(3):
         am, as_ = ad_lab[:,:,ch].mean(), ad_lab[:,:,ch].std() + 1e-6
@@ -167,31 +169,18 @@ def match_colors_to_scene(ad_bgr: np.ndarray,
         shifted = (ad_lab[:,:,ch] - am) * (ss / as_) + sm
         out[:,:,ch] = np.clip(
             strength * shifted + (1 - strength) * ad_lab[:,:,ch], 0, 255)
+    
     graded = cv2.cvtColor(out.astype(np.uint8), cv2.COLOR_LAB2BGR)
-
-    # Calculate luminance for gamma correction
-    sc_lum = max(float(sr.mean()) / 255, 0.05)
-    ad_lum = max(float(graded.mean()) / 255, 0.05)
-
-    # Optional Saturation Boost (30%)                NEW FIX
-    gamma  = float(np.clip(np.log(sc_lum) / np.log(ad_lum), 0.4, 2.5))
-    lut    = np.uint8([min(255, int((i/255)**(1/gamma)*255))
-                       for i in range(256)])
-    graded = cv2.LUT(graded, lut)
-
-    # Final saturation boost to make colors POP
-    hsv = cv2.cvtColor(graded, cv2.COLOR_BGR2HSV).astype(np.float32)
-    hsv[:,:,1] = np.clip(hsv[:,:,1] * 1.35, 0, 255) # 35% boost
-    return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
+    return graded
 
 
 # ------------------------------------------------------------------------------
 #  WORLD-LOCK ANCHOR
 # ------------------------------------------------------------------------------
 class AdAnchor:
-    _ORB_N     = 3000
-    _MIN_INL   = 12
-    _ROLL_EVERY = 10
+    _ORB_N     = 500  # Reduced for performance
+    _MIN_INL   = 10
+    _ROLL_EVERY = 15
 
     def __init__(self):
         self._orb = cv2.ORB_create(self._ORB_N)
@@ -217,7 +206,7 @@ class AdAnchor:
         try:
             matches = sorted(
                 self._bf.match(self._ref_des, cur_des),
-                key=lambda m: m.distance)[:300]
+                key=lambda m: m.distance)[:100]
             if len(matches) < self._MIN_INL:
                 return None, None, None
             src_pts = np.float32(
@@ -387,14 +376,20 @@ class PersonGuard:
         path       = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
         self._face = cv2.CascadeClassifier(path)
         self._m    = 28
-
+        self._cached_faces = []
+        self._counter = 0
+ 
     def _face_rects(self, frame):
-        g   = cv2.equalizeHist(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-        det = self._face.detectMultiScale(g, 1.1, 4, minSize=(28, 28))
-        h, w = frame.shape[:2]
-        return [(max(0, x-self._m), max(0, y-self._m),
-                 min(w, x+fw+self._m), min(h, y+fh+self._m))
-                for (x,y,fw,fh) in (det if len(det) else [])]
+        # Only run face detection every 10 frames to save CPU
+        if self._counter % 10 == 0:
+            g   = cv2.equalizeHist(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+            det = self._face.detectMultiScale(g, 1.2, 4, minSize=(30, 30))
+            h, w = frame.shape[:2]
+            self._cached_faces = [(max(0, x-self._m), max(0, y-self._m),
+                                  min(w, x+fw+self._m), min(h, y+fh+self._m))
+                                 for (x,y,fw,fh) in (det if len(det) else [])]
+        self._counter += 1
+        return self._cached_faces
 
     def restore(self, original, composite, persons, ad_mask):
         out = composite.copy()
