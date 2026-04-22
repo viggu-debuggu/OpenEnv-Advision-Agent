@@ -26,6 +26,15 @@ tags:
 
 **AdVision AI** is a state-of-the-art, OpenEnv-compliant Reinforcement Learning environment designed to bridge the gap between AI and media production. It allows agents to learn the complex art of **Contextual In-Content Advertising**—placing ads realistically on surfaces within video scenes without disrupting the user experience.
 
+### ✨ New: Premium Human-in-the-Loop UI
+The latest version features a high-end, custom-built web application for human evaluation and real-time inference visualization. 
+
+![AdVision AI Premium UI](server/static/assets/ui_preview.png)
+
+*The new dashboard features glassmorphism design, real-time depth estimation visualization, and a comprehensive performance analytics suite.*
+
+---
+
 ---
 
 ## 💡 The Vision: unskippable, Contextual, Spatial
