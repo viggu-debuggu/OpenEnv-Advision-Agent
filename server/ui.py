@@ -42,7 +42,7 @@ def process_video(
     progress=gr.Progress()
 ):
     if input_video is None or ad_image is None:
-        return None, "Please upload both a video and an ad image."
+        return None, "<div style='color: #ef4444; padding: 10px;'>⚠️ Please upload both a video and an ad image.</div>"
 
     det, de, eng, rf = load_models()
     eng.reset()
@@ -144,77 +144,210 @@ def process_video(
         out.release()
 
     if not all_rewards:
-        return out_path, "No frames processed."
+        return out_path, "<div style='color: #ef4444; padding: 10px;'>⚠️ No frames were processed. Please check input video.</div>"
 
     # Compute average scores
     avg_scores = {k: np.mean([r[k] for r in all_rewards]) for k in all_rewards[0].keys()}
-    summary = f"✅ Processed {frame_idx} frames.\n\n"
-    summary += "🏆 REWARD BREAKDOWN (Phase 3 Evaluation):\n"
-    summary += f"• Overall Quality: {avg_scores['total']:.2f}/0.90\n"
-    summary += f"• Realism: {avg_scores['realism']:.2f}  • Alignment: {avg_scores['alignment']:.2f}\n"
-    summary += f"• Lighting: {avg_scores['lighting']:.2f} • Occlusion: {avg_scores['occlusion']:.2f}\n"
-    summary += f"• Stability: {avg_scores['temporal']:.2f}"
+    
+    def get_bar(val, color="#3b82f6"):
+        percent = int(val * 100)
+        return f"""
+        <div style='width: 100%; background: rgba(255,255,255,0.1); border-radius: 4px; height: 8px; margin-top: 4px;'>
+            <div style='width: {percent}%; background: {color}; height: 100%; border-radius: 4px; box-shadow: 0 0 10px {color}88;'></div>
+        </div>
+        """
 
-    return out_path, summary
+    summary_html = f"""
+    <div style='color: #f8fafc;'>
+        <h3 style='margin: 0; color: #60a5fa;'>🏆 Episode Performance</h3>
+        <p style='font-size: 0.9rem; color: #94a3b8;'>Processed {frame_idx} frames successfully.</p>
+        
+        <div style='margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;'>
+            <div class='metric-card'>
+                <span style='font-size: 0.8rem; color: #94a3b8;'>Overall Quality</span>
+                <div style='font-size: 1.5rem; font-weight: 800; color: #3b82f6;'>{avg_scores['total']:.2f}</div>
+                {get_bar(avg_scores['total'], "#3b82f6")}
+            </div>
+            <div class='metric-card'>
+                <span style='font-size: 0.8rem; color: #94a3b8;'>Temporal Stability</span>
+                <div style='font-size: 1.5rem; font-weight: 800; color: #10b981;'>{avg_scores['temporal']:.2f}</div>
+                {get_bar(avg_scores['temporal'], "#10b981")}
+            </div>
+            <div class='metric-card'>
+                <span style='font-size: 0.8rem; color: #94a3b8;'>Realism & Blend</span>
+                <div style='font-size: 1.2rem; font-weight: 600;'>{avg_scores['realism']:.2f}</div>
+                {get_bar(avg_scores['realism'], "#60a5fa")}
+            </div>
+            <div class='metric-card'>
+                <span style='font-size: 0.8rem; color: #94a3b8;'>Spatial Alignment</span>
+                <div style='font-size: 1.2rem; font-weight: 600;'>{avg_scores['alignment']:.2f}</div>
+                {get_bar(avg_scores['alignment'], "#a855f7")}
+            </div>
+        </div>
+        
+        <div style='margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem;'>
+            <span style='color: #94a3b8;'>Detail:</span> Light: {avg_scores['lighting']:.2f} | Occ: {avg_scores['occlusion']:.2f}
+        </div>
+    </div>
+    """
+
+    return out_path, summary_html
 
 # UI Construction
-with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="indigo")) as demo:
-    gr.Markdown(
-        """
-        # 🚀 AdVision AI - In-Content Ad Placement
-        ### Phase 3: Human Evaluation Demo
-        This interface allows you to evaluate the quality of our ad-placement agent. 
-        Upload a video and a transparent ad (PNG) to see the results.
-        """
-    )
+TITLE = "🎯 AdVision AI — Precision Ad Placement"
+SUBTITLE = "Meta PyTorch OpenEnv Hackathon | Real-World Spatial AI"
+
+CUSTOM_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+body, .gradio-container {
+    font-family: 'Outfit', sans-serif !important;
+    background: radial-gradient(circle at 50% 0%, #1a1c2e 0%, #0d0e1a 100%) !important;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
+
+.header-container {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.header-title {
+    font-size: 3.5rem !important;
+    font-weight: 800 !important;
+    background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem !important;
+}
+
+.header-subtitle {
+    color: #94a3b8 !important;
+    font-size: 1.2rem !important;
+    font-weight: 400 !important;
+}
+
+.metric-card {
+    background: rgba(30, 41, 59, 0.5) !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+    border-left: 4px solid #3b82f6 !important;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    background: rgba(30, 41, 59, 0.8) !important;
+}
+
+footer { visibility: hidden; }
+
+.gr-button-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+}
+
+.gr-button-primary:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5) !important;
+    transform: scale(1.02) !important;
+}
+
+.status-badge {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #10b981 !important;
+    padding: 4px 12px !important;
+    border-radius: 9999px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+"""
+
+with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="indigo"), css=CUSTOM_CSS) as demo:
+    with gr.Div(elem_classes="header-container"):
+        gr.HTML(f"""
+            <h1 class='header-title'>{TITLE}</h1>
+            <p class='header-subtitle'>{SUBTITLE}</p>
+            <div style='margin-top: 20px;'>
+                <span class='status-badge'>Compliant with OpenEnv v1.0</span>
+                <span class='status-badge' style='margin-left: 10px; border-color: rgba(96, 165, 250, 0.2); color: #60a5fa;'>Vision: YOLOv8 + MiDaS</span>
+            </div>
+        """)
 
     with gr.Row():
-        with gr.Column(scale=1):
-            with gr.Group():
-                gr.Markdown("### 🛠️ Inputs")
-                video_input = gr.Video(label="Base Scene (Video)")
-                ad_input = gr.Image(label="Ad Banner/Bottle (Image)", type="numpy")
+        with gr.Column(scale=4):
+            with gr.Div(elem_classes="glass-card"):
+                gr.Markdown("### 📥 Source Media")
+                with gr.Row():
+                    video_input = gr.Video(label="Scene Video", elem_id="video-input")
+                    ad_input = gr.Image(label="Ad Asset (PNG preferred)", type="numpy")
+            
+            with gr.Div(elem_classes="glass-card", style="margin-top: 20px;"):
+                gr.Markdown("### ⚙️ Placement Precision Engine")
+                with gr.Row():
+                    with gr.Column():
+                        scale_slider = gr.Slider(0.5, 2.5, value=1.4, step=0.1, label="🔍 Ad Scale")
+                        alpha_slider = gr.Slider(0.0, 1.0, value=0.97, step=0.01, label="💧 Opacity (Alpha)")
+                    with gr.Column():
+                        rotation_slider = gr.Slider(-180, 180, value=0, step=5, label="🔄 Rotation")
+                        tilt_slider = gr.Slider(0.0, 1.0, value=0.0, step=0.05, label="📐 Perspective Tilt")
+                
+                with gr.Accordion("✨ Advanced Effects", open=False):
+                    with gr.Row():
+                        shadow_slider = gr.Slider(0.0, 1.0, value=0.4, step=0.05, label="🌑 Shadow Strength")
+                        feather_slider = gr.Slider(0, 50, value=22, step=1, label="🌫️ Edge Feathering")
 
-            with gr.Accordion("⚙️ Placement Fine-Tuning", open=True):
-                scale_slider = gr.Slider(0.5, 2.5, value=1.4, step=0.1, label="Ad Scale")
-                alpha_slider = gr.Slider(0.0, 1.0, value=0.97, step=0.01, label="Opacity (Alpha)")
-                rotation_slider = gr.Slider(-180, 180, value=0, step=5, label="Rotation (Degrees)")
-                tilt_slider = gr.Slider(0.0, 1.0, value=0.0, step=0.05, label="Perspective Tilt")
-                shadow_slider = gr.Slider(0.0, 1.0, value=0.4, step=0.05, label="Shadow Strength")
-                feather_slider = gr.Slider(0, 50, value=22, step=1, label="Boundary Feathering")
+                run_btn = gr.Button("✨ Render Augmented Scene", variant="primary", size="lg")
 
-            run_btn = gr.Button("✨ Process Ad Placement", variant="primary")
+        with gr.Column(scale=5):
+            with gr.Div(elem_classes="glass-card"):
+                gr.Markdown("### 📺 Production Output")
+                video_output = gr.Video(label="Final Composite", interactive=False)
+                
+            with gr.Div(elem_classes="glass-card", style="margin-top: 20px;"):
+                gr.Markdown("### 📊 Performance Analytics")
+                status_text = gr.HTML(label="Agent Feedback & Rewards", elem_id="status-display")
 
-        with gr.Column(scale=1):
-            gr.Markdown("### 📺 Output")
-            video_output = gr.Video(label="Augmented Scene")
-            status_text = gr.Textbox(label="Status", interactive=False)
+    with gr.Row(style="margin-top: 40px;"):
+        with gr.Column():
+            with gr.Div(elem_classes="metric-card"):
+                gr.Markdown("#### 🟠 Spatial Reasoning\nPrecise 3D localization via monocular depth estimation.")
+        with gr.Column():
+            with gr.Div(elem_classes="metric-card"):
+                gr.Markdown("#### 🟢 Temporal Stability\nORB-Homography tracking ensures zero pixel drift.")
+        with gr.Column():
+            with gr.Div(elem_classes="metric-card"):
+                gr.Markdown("#### 🔵 Realistic Blending\nLAB color transfer matches ad to scene lighting.")
 
-            with gr.Group():
-                gr.Markdown("### 💡 Technology Insights")
-                gr.Markdown(
-                    """
-                    - **YOLOv8 & MiDaS**: Real-time object detection and monocular depth estimation.
-                    - **ORB Homography**: Advanced World-Lock tracking for temporal stability.
-                    - **LAB Color Transfer**: Real-time color grading to match scene lighting.
-                    - **Gaussian Feathering**: Eliminates hard edges for seamless blending.
-                    """
-                )
-
+    # Fix Example Paths
+    EXAMPLE_VIDEO = os.path.join(ROOT_DIR, "data", "input_videos", "test.mp4")
+    if not os.path.exists(EXAMPLE_VIDEO):
+        EXAMPLE_VIDEO = None
+        
     gr.Examples(
         examples=[
             [
-                os.path.join(ROOT_DIR, "data", "samples", "living_room.mp4") if os.path.exists(os.path.join(ROOT_DIR, "data", "samples", "living_room.mp4")) else None,
+                EXAMPLE_VIDEO,
                 os.path.join(ROOT_DIR, "data", "ad_images", "oil_ad.png"),
                 1.4, 0, 0, 0.97, 22, 0.4
             ],
             [
-                os.path.join(ROOT_DIR, "data", "samples", "office.mp4") if os.path.exists(os.path.join(ROOT_DIR, "data", "samples", "office.mp4")) else None,
+                EXAMPLE_VIDEO,
                 os.path.join(ROOT_DIR, "data", "ad_images", "sample_ad.png"),
                 1.2, 0, 0.1, 0.95, 15, 0.3
             ],
         ],
-        inputs=[video_input, ad_input, scale_slider, rotation_slider, tilt_slider, alpha_slider, feather_slider, shadow_slider]
+        inputs=[video_input, ad_input, scale_slider, rotation_slider, tilt_slider, alpha_slider, feather_slider, shadow_slider],
+        cache_examples=False
     )
 
     run_btn.click(

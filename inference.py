@@ -60,6 +60,18 @@ API_KEY = HF_TOKEN
 # Benchmark constants (Dynamic per task)
 # ---------------------------------------------------------------------------
 BENCHMARK             = "advision"
+# FIX #11: Defined missing lookups (needed for step count and success logic)
+TASK_STEP_LOOKUP = {
+    "task1_easy": 10,
+    "task2_medium": 15,
+    "task3_hard": 30
+}
+TASK_THRESHOLDS = {
+    "task1_easy": 0.50,
+    "task2_medium": 0.60,
+    "task3_hard": 0.70
+}
+
 # Default to task1_easy if not specified, matching the single-task execution requirement
 TASK_NAME_ENV = os.getenv("TASK_NAME", "task1_easy")
 MAX_STEPS     = TASK_STEP_LOOKUP.get(TASK_NAME_ENV, 10)

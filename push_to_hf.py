@@ -1,48 +1,71 @@
 import subprocess
+import os
 
-# 1. Initialize Git in the project root
+# 1. Configuration
+GITHUB_URL = "https://github.com/viggu-debuggu/OpenEnv-Advision-Agent.git"
+HF_SPACE_URL = "https://huggingface.co/spaces/vignesh93917/OpenEnv_AdVision_Agent"
+
 def run(cmd):
     print(f"> {cmd}")
     subprocess.run(cmd, shell=True, check=True)
 
+# 2. Refined .gitignore for OpenEnv Compliance
 gitignore = """
 .env
 .venv
-__pycache__
+advision_env/__pycache__/
+server/__pycache__/
+__pycache__/
 *.pyc
 .ruff_cache
-*.pt
-*.mp4
-*.png
-*.jpg
 .ipynb_checkpoints
-data/input_videos/*
 data/output_videos/*
-data/ad_images/oil_ad.png
-data/ad_images/sample_ad.png
-# Exclude actual images used in dev, keep placeholders if needed.
+# Keep samples for UI functionality
+!data/input_videos/test.mp4
+!data/ad_images/oil_ad.png
+!data/ad_images/sample_ad.png
+# Keep models
+!yolov8n.pt
 Thumbs.db
+.DS_Store
 """
 
 with open('.gitignore', 'w') as f:
     f.write(gitignore)
 
 try:
-    # 2. Add files and commit
-    run("git init")
+    print("🚀 Initializing AdVision Deployment...")
+    
+    # Check if git is initialized
+    if not os.path.exists(".git"):
+        run("git init")
+    
     run("git add .")
-    run('git commit -m "OpenEnv Submission: Finalized AdVision Environment"')
+    run('git commit -m "Finalized AdVision: Stunning UI + OpenEnv v1.0 Compliance"')
 
-    # 3. Add remotes
-    # Replace these URLs with your actual repo URLs if needed
-    # run("git remote add origin https://github.com/vignesh-debuggu/AdVision.git")
-    # run("git remote add hf https://huggingface.co/spaces/vignesh-debuggu/AdVision")
+    # 3. Handle Remotes
+    print("\n📦 Configuring Remotes...")
+    try:
+        run(f"git remote add github {GITHUB_URL}")
+    except:
+        run(f"git remote set-url github {GITHUB_URL}")
+        
+    try:
+        run(f"git remote add hf {HF_SPACE_URL}")
+    except:
+        run(f"git remote set-url hf {HF_SPACE_URL}")
 
     # 4. Push to repositories
-    # run("git push -u origin main --force")
-    # run("git push -u hf main --force")
-    print("\n✅ Successfully initialized and committed local changes.")
-    print("   To push, uncomment the git remote and push lines above.")
+    print("\n⬆️ Pushing to GitHub...")
+    run("git push -u github main --force")
+    
+    print("\n⬆️ Pushing to Hugging Face Spaces...")
+    run("git push -u hf main --force")
+    
+    print("\n✅ AdVision successfully deployed to GitHub and Hugging Face!")
+    print(f"🔗 GitHub: {GITHUB_URL}")
+    print(f"🔗 Space:  {HF_SPACE_URL}")
 
 except Exception as e:
-    print(f"❌ Error during git process: {e}")
+    print(f"\n❌ Error during deployment: {e}")
+    print("Hint: Ensure you have 'git' installed and are logged in to GitHub/HF.")
