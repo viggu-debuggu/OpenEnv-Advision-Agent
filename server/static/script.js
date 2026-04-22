@@ -85,19 +85,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             
             // Update Video
-            videoOutput.src = result.video_url;
+            videoOutput.style.display = 'none'; // Hide while loading
+            videoOutput.src = result.video_url + '?t=' + new Date().getTime();
             videoOutput.load();
-            videoOutput.play();
-            document.getElementById('output-placeholder').style.display = 'none';
-            videoOutput.style.display = 'block';
+            
+            videoOutput.oncanplay = () => {
+                overlay.style.display = 'none';
+                document.getElementById('output-placeholder').style.display = 'none';
+                videoOutput.style.display = 'block';
+                videoOutput.play();
+            };
 
             // Update Metrics
             updateMetrics(result.metrics);
 
         } catch (error) {
             alert('Error: ' + error.message);
-        } finally {
             overlay.style.display = 'none';
+        } finally {
             renderBtn.disabled = false;
         }
     });

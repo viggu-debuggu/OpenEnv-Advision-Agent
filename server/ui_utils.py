@@ -117,6 +117,26 @@ def run_processing_pipeline(
         cap.release()
         out.release()
 
+    # Post-process with FFmpeg for web compatibility (H.264)
+    web_friendly_path = out_path.replace(".mp4", "_web.mp4")
+    try:
+        import subprocess
+        # -vcodec libx264 -pix_fmt yuv420p is the standard for web playback
+        cmd = [
+            "ffmpeg", "-y", "-i", out_path,
+            "-vcodec", "libx264", "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            web_friendly_path
+        ]
+        subprocess.run(cmd, check=True, capture_output=True)
+        # Replace the original with the web-friendly version
+        os.remove(out_path)
+        out_path = web_friendly_path
+    except Exception as e:
+        print(f"FFmpeg conversion failed: {e}. Falling back to raw OpenCV output.")
+        if os.path.exists(web_friendly_path):
+            os.remove(web_friendly_path)
+
     if not all_rewards:
         return out_path, {}, 0
 
