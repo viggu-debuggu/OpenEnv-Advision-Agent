@@ -1,12 +1,20 @@
+
 .env
 .venv
-__pycache__
+advision_env/__pycache__/
+server/__pycache__/
+__pycache__/
 *.pyc
 .ruff_cache
-*.pt
-yolov8n.pt
-logs/
-data/input_videos/*
+.ipynb_checkpoints
 data/output_videos/*
-.DS_Store
+server/static/temp/*
+# Keep samples for UI functionality
+!data/input_videos/test.mp4
+!data/ad_images/oil_ad.png
+!data/ad_images/sample_ad.png
+!server/static/assets/*
+# Keep models
+!yolov8n.pt
 Thumbs.db
+.DS_Store

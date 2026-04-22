@@ -20,10 +20,12 @@ __pycache__/
 .ruff_cache
 .ipynb_checkpoints
 data/output_videos/*
+server/static/temp/*
 # Keep samples for UI functionality
 !data/input_videos/test.mp4
 !data/ad_images/oil_ad.png
 !data/ad_images/sample_ad.png
+!server/static/assets/*
 # Keep models
 !yolov8n.pt
 Thumbs.db
@@ -34,7 +36,7 @@ with open('.gitignore', 'w') as f:
     f.write(gitignore)
 
 try:
-    print("🚀 Initializing AdVision Deployment...")
+    print("Initializing AdVision Deployment...")
     
     # Check if git is initialized
     if not os.path.exists(".git"):
@@ -44,7 +46,7 @@ try:
     run('git commit -m "Finalized AdVision: Stunning UI + OpenEnv v1.0 Compliance"')
 
     # 3. Handle Remotes
-    print("\n📦 Configuring Remotes...")
+    print("\nConfiguring Remotes...")
     try:
         run(f"git remote add github {GITHUB_URL}")
     except:
@@ -56,16 +58,16 @@ try:
         run(f"git remote set-url hf {HF_SPACE_URL}")
 
     # 4. Push to repositories
-    print("\n⬆️ Pushing to GitHub...")
+    print("\nPushing to GitHub...")
     run("git push -u github main --force")
     
-    print("\n⬆️ Pushing to Hugging Face Spaces...")
+    print("\nPushing to Hugging Face Spaces...")
     run("git push -u hf main --force")
     
-    print("\n✅ AdVision successfully deployed to GitHub and Hugging Face!")
-    print(f"🔗 GitHub: {GITHUB_URL}")
-    print(f"🔗 Space:  {HF_SPACE_URL}")
+    print("\nAdVision successfully deployed to GitHub and Hugging Face!")
+    print(f"GitHub: {GITHUB_URL}")
+    print(f"Space:  {HF_SPACE_URL}")
 
 except Exception as e:
-    print(f"\n❌ Error during deployment: {e}")
+    print(f"\nError during deployment: {e}")
     print("Hint: Ensure you have 'git' installed and are logged in to GitHub/HF.")

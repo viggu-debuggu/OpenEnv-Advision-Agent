@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdVision AI — Precision Ad Placement</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">AdVision AI</h1>
+            <p class="subtitle">Next-Gen Spatial Intelligence for Media Production</p>
+            <div class="status-badges">
+                <span class="badge">OpenEnv v1.0 Compliant</span>
+                <span class="badge" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.2);">YOLOv8 + MiDaS Pipeline</span>
+            </div>
+        </header>
+
+        <main class="main-grid">
+            <!-- Left Column: Inputs & Settings -->
+            <section class="inputs-section">
+                <div class="glass-card">
+                    <h3>📥 Source Media</h3>
+                    
+                    <div class="upload-zone" id="video-zone">
+                        <input type="file" id="video-input" hidden accept="video/*">
+                        <span class="upload-icon">🎥</span>
+                        <strong>Choose Video</strong>
+                        <p class="file-info">Drag & Drop scene video here</p>
+                    </div>
+
+                    <div class="upload-zone" id="ad-zone">
+                        <input type="file" id="ad-input" hidden accept="image/*">
+                        <span class="upload-icon">🖼️</span>
+                        <strong>Choose Ad Asset</strong>
+                        <p class="file-info">Drag & Drop transparent PNG/JPG</p>
+                    </div>
+
+                    <h3 style="margin-top: 40px;">⚙️ Placement Precision</h3>
+                    <div class="controls-group">
+                        <div class="control-item">
+                            <label>Scale <span class="value-tag">1.4</span></label>
+                            <input type="range" id="scale" min="0.5" max="2.5" step="0.1" value="1.4">
+                        </div>
+                        <div class="control-item">
+                            <label>Opacity <span class="value-tag">0.97</span></label>
+                            <input type="range" id="alpha" min="0.0" max="1.0" step="0.01" value="0.97">
+                        </div>
+                        <div class="control-item">
+                            <label>Rotation <span class="value-tag">0°</span></label>
+                            <input type="range" id="rotation" min="-180" max="180" step="5" value="0">
+                        </div>
+                        <div class="control-item">
+                            <label>Tilt <span class="value-tag">0.0</span></label>
+                            <input type="range" id="tilt" min="0.0" max="1.0" step="0.05" value="0.0">
+                        </div>
+                        <div class="control-item">
+                            <label>Shadow <span class="value-tag">0.4</span></label>
+                            <input type="range" id="shadow" min="0.0" max="1.0" step="0.05" value="0.4">
+                        </div>
+                        <div class="control-item">
+                            <label>Feather <span class="value-tag">22</span></label>
+                            <input type="range" id="feather" min="0" max="50" step="1" value="22">
+                        </div>
+                    </div>
+
+                    <button id="render-btn" class="btn-primary" disabled>
+                        ✨ Render Augmented Scene
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Column: Output & Analytics -->
+            <section class="output-section">
+                <div class="glass-card" style="position: relative; overflow: hidden;">
+                    <div class="processing-overlay" id="processing-overlay">
+                        <div class="spinner"></div>
+                        <p id="progress-text">Processing frames...</p>
+                    </div>
+
+                    <h3>📺 Production Preview</h3>
+                    <div class="video-preview-wrapper">
+                        <div id="output-placeholder" class="placeholder-text">
+                            <p style="font-size: 3rem; margin-bottom: 10px;">🎞️</p>
+                            <p>Rendered scene will appear here</p>
+                        </div>
+                        <video id="video-output" controls style="display: none;"></video>
+                    </div>
+
+                    <h3>📊 Performance Analytics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card" id="metric-quality">
+                            <div class="metric-label">Overall Quality</div>
+                            <div class="metric-value">0.00</div>
+                            <div class="progress-bar-mini"><div class="progress-fill"></div></div>
+                        </div>
+                        <div class="metric-card" id="metric-stability">
+                            <div class="metric-label">Temporal Stability</div>
+                            <div class="metric-value">0.00</div>
+                            <div class="progress-bar-mini"><div class="progress-fill"></div></div>
+                        </div>
+                        <div class="metric-card" id="metric-realism">
+                            <div class="metric-label">Realism & Blend</div>
+                            <div class="metric-value">0.00</div>
+                            <div class="progress-bar-mini"><div class="progress-fill"></div></div>
+                        </div>
+                        <div class="metric-card" id="metric-alignment">
+                            <div class="metric-label">Spatial Alignment</div>
+                            <div class="metric-value">0.00</div>
+                            <div class="progress-bar-mini"><div class="progress-fill"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="margin-top: 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center; padding: 20px;">
+                    <div>
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🟠</div>
+                        <div style="font-size: 0.8rem; font-weight: 600;">Spatial</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🟢</div>
+                        <div style="font-size: 0.8rem; font-weight: 600;">Temporal</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🔵</div>
+                        <div style="font-size: 0.8rem; font-weight: 600;">Blending</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

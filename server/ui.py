@@ -15,20 +15,7 @@ from advision_env.models.vision_models import ObjectDetector, DepthEstimator  # 
 from advision_env.pipeline.placement_engine import PlacementEngine, PlacementConfig  # noqa: E402
 from advision_env.env.reward import RewardFunction  # noqa: E402
 
-# Core components (lazy loaded)
-detector = None
-depth_est = None
-engine = None
-reward_fn = None
-
-def load_models():
-    global detector, depth_est, engine, reward_fn
-    if detector is None:
-        detector = ObjectDetector()
-        depth_est = DepthEstimator()
-        engine = PlacementEngine()
-        reward_fn = RewardFunction()
-    return detector, depth_est, engine, reward_fn
+from server.ui_utils import load_models, run_processing_pipeline
 
 def process_video(
     input_video,
@@ -44,30 +31,8 @@ def process_video(
     if input_video is None or ad_image is None:
         return None, "<div style='color: #ef4444; padding: 10px;'>⚠️ Please upload both a video and an ad image.</div>"
 
-    det, de, eng, rf = load_models()
-    eng.reset()
-    rf.__init__() # Reset temporal history
-
-    cap = cv2.VideoCapture(input_video)
-    if not cap.isOpened():
-        return None, "Error: Could not open video file."
-
     # Gradio provides RGB, but our OpenCV engine expects BGR
     ad_image_bgr = cv2.cvtColor(ad_image, cv2.COLOR_RGB2BGR)
-
-    # Video properties
-    width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps    = cap.get(cv2.CAP_PROP_FPS) or 30
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    max_process_frames = min(total_frames, 150) # Limit for demo
-
-    # Output setup
-    fd, out_path = tempfile.mkstemp(suffix=".mp4")
-    os.close(fd)
-
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
 
     cfg = PlacementConfig(
         scale=scale,
@@ -79,76 +44,19 @@ def process_video(
         enable_shadow=(shadow_strength > 0)
     )
 
-    all_rewards = []
-    frame_idx = 0
+    def prog_cb(idx, total):
+        progress(idx / total, desc=f"Processing frame {idx}...")
+
     try:
-        while cap.isOpened() and frame_idx < max_process_frames:
-            ret, frame = cap.read()
-            if not ret:
-                break
+        out_path, avg_scores, frame_idx = run_processing_pipeline(
+            input_video, ad_image_bgr, cfg, progress_callback=prog_cb
+        )
+    except Exception as e:
+        return None, f"<div style='color: #ef4444; padding: 10px;'>⚠️ Error: {str(e)}</div>"
 
-            progress(frame_idx / max_process_frames, desc=f"Processing frame {frame_idx}...")
-
-            # Run detection and depth on first frame or periodically
-            if frame_idx == 0:
-                surfaces, persons = detector.detect(frame)
-                depth_map = depth_est.estimate(frame)
-
-                if not surfaces:
-                    # Fallback to center if nothing found
-                    h, w = frame.shape[:2]
-                    mock_corners = np.array([
-                        [w*0.3, h*0.3], [w*0.7, h*0.3],
-                        [w*0.7, h*0.7], [w*0.3, h*0.7]
-                    ], dtype=np.float32)
-                    target_corners = mock_corners
-                    target_surf_mask = np.zeros((h, w), np.uint8)
-                    cv2.fillPoly(target_surf_mask, [target_corners.astype(np.int32)], 1)
-                    persons = []
-                    depth_map = np.ones((h, w), np.float32) * 0.5
-                    target_depth = 0.5
-                else:
-                    # Use largest surface
-                    best = max(surfaces, key=lambda s: s.area)
-                    target_corners = best.corners
-                    h, w = frame.shape[:2]
-                    target_surf_mask = np.zeros((h, w), np.uint8)
-                    cv2.fillPoly(target_surf_mask, [target_corners.astype(np.int32)], 1)
-                    target_depth = depth_est.region_depth(depth_map, best.bbox)
-
-            # Place ad
-            result, bin_mask, adj = engine.place(
-                frame,
-                ad_image_bgr,
-                target_corners,
-                persons=persons,
-                depth_map=depth_map,
-                cfg=cfg
-            )
-
-            # Update corners for next frame temporal calc
-            target_corners = adj
-
-            # Calculate reward for this frame
-            rc = reward_fn.compute(
-                frame, result, bin_mask, target_surf_mask,
-                target_depth, persons, corners=adj
-            )
-            all_rewards.append(rc.to_dict())
-
-            out.write(result)
-            frame_idx += 1
-
-    finally:
-        cap.release()
-        out.release()
-
-    if not all_rewards:
+    if frame_idx == 0:
         return out_path, "<div style='color: #ef4444; padding: 10px;'>⚠️ No frames were processed. Please check input video.</div>"
 
-    # Compute average scores
-    avg_scores = {k: np.mean([r[k] for r in all_rewards]) for k in all_rewards[0].keys()}
-    
     def get_bar(val, color="#3b82f6"):
         percent = int(val * 100)
         return f"""
@@ -192,6 +100,7 @@ def process_video(
     """
 
     return out_path, summary_html
+
 
 # UI Construction
 TITLE = "🎯 AdVision AI — Precision Ad Placement"
